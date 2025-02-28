@@ -1,5 +1,5 @@
 import pandas as pd
-
+import os
 import json
 
 
@@ -27,11 +27,11 @@ def get_dataset_id() -> None:
         ff.write('\n'.join(str(i) for i in res))
 
 
-def filter_data(voxel: int) -> list[dict]:
+def filter_data(voxel: int, path: str) -> list[dict]:
     """
     Retrieves a List of corresponding Section Images for the p_4 mouse for the corresponding p-56 voxel inputted
     """
-    dataset = pd.read_csv(r"C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Outputs\P4_New_Chunk.csv")
+    dataset = pd.read_csv(rf"{path}")
     temp = dataset["Section Image"]
     offset = voxel * 21
     end = offset + 20
@@ -84,6 +84,33 @@ def get_unique_genes(common_genes: list[str]) -> list[str]:
     result = [genes[i] + "-" + str(experiment[i]) for i in range(len(genes))]
     return result
 
+
+def get_section_images() -> list:
+    section_images = {}
+
+
+    temp = r"./Datasets/Outputs/Test/P4_Chunk_0.csv"
+    counter = 1
+    while os.path.exists(temp):
+        print(temp)
+        file = pd.read_csv(rf"{temp}")
+        for row in file['Section_Image']:
+            new_row = json.loads(row.replace("\'","\""))
+            for chunk in new_row:
+                image = chunk['image_sync']['section_image_id']
+                if image not in section_images:
+                    section_images[image] = 1
+                else:
+                    section_images[image] = section_images[image]+1
+        #print(temp)
+        temp = rf"./Datasets/Outputs/Test/P4_Chunk_{counter}.csv"
+        counter+=1
+    print(section_images)
+
+
+    
+    
+    return section_images
 
 def filter_common_genes() -> None:
     """
@@ -150,4 +177,28 @@ def noise_threshold() -> None:
 
     ...
 
-noise_threshold()
+
+def get_all_chunks():
+    chunks = []
+    temp = r"./Datasets/Outputs/Test/P4_Chunk_0.csv"
+    counter = 1
+    while os.path.exists(temp):
+        #print(temp)
+        chunks.append(pd.read_csv(rf"{temp}"))
+        temp = rf"./Datasets/Outputs/Test/P4_Chunk_{counter}.csv"
+        counter+=1
+    return chunks
+
+
+    #print(json.loads(chunk['Section_Image'][0].replace("\'","\""))[0]['image_sync']['section_image_id'])
+
+
+def get_path() -> str:
+    temp = r"./Datasets/Outputs/Chunks/P4_Chunk_0.csv"
+    counter = 1
+    while os.path.exists(temp):
+        temp = rf"./Datasets/Outputs/Chunks/P4_Chunk_{counter}.csv"
+        counter+=1
+    return temp
+
+    

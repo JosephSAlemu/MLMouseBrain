@@ -2,9 +2,11 @@ import pandas as pd
 import requests
 import json
 import csv
-from filter import filter_data
+import os
+#from filter import filter_data
 
 
+count = 0
 
 voxel = 0
 
@@ -17,46 +19,113 @@ def api_calls() -> None:
 
 
 
+def download_section_images() -> None:
+
+    file = pd.read_csv(r"./Datasets/Outputs/Chunks/P4_Chunk_0.csv")
+    #print(len(file['Section_Image']))
+    trues = 0
+    falses = 0
+    i = 0
+    for row in file['Section_Image']:
+        new_row = json.loads(row.replace("\'","\""))
+        for chunk in new_row:
+            section_image = chunk['image_sync']['section_image_id']
+            if is_valid_image(int(section_image)):
+                image = open(rf"./Datasets/SectionImages/{section_image}.jpg", "wb")
+                url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
+                response = requests.get(url).content
+                image.write(response)
+                image.close()
+                
+
+def is_valid_image(section_image: int) -> bool:
+    path = rf"./Datasets/SectionImages/{section_image}.jpg"
+    if os.path.exists(path):
+        return False
+    return True
+
+
 def structure_to_image() -> None:
+    global count
     file = pd.read_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Outputs\NewDenC_Microns.csv')
 
     #max = len(file['X'])
-    start = 0
-    while start < 1:
-        chunk(file['X'][start], file['Y'][start], file['Z'][start])
-        start+=1
-        print(f"\n{voxel}")
+    while count <= len(file['X']):
+        fifty_chunk(file['X'][count], file['Y'][count], file['Z'][count])
+        count+=1
    
 def chunk(X: int, Y: int, Z: int ) -> None:
+    global count
     global voxel
     list = []
     chunk_headers = [
-        "Voxel", "Section Image"
+        "Voxel", "Section_Image"
     ]
-    created_file = r"./Datasets/Outputs/P4_New_Chunk.csv"
+    if is_valid_path():
+        created_file = rf"./Datasets/Outputs/Chunks/P4_Chunk_{count}.csv"
+        with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
+            writer = csv.writer(new_file)
+            writer.writerow(chunk_headers)
+            
+            for line in file:
+                if len(list) == 100:
+                    url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, list))}"
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        data = f"{response.json()['msg']}"
+                        writer.writerow([count, data])
+                        list = []
+                    else:
+                        print(f"ISSUE WITH QUERY {url}")
+                else:
+                    list.append(int(line))
+            url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, list))}"
+            response = requests.get(url)
+            data = f"{response.json()['msg']}"
+            writer.writerow([count, data])
+            list = []
+            
+            voxel+=1
 
-    with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
-        writer = csv.writer(new_file)
-        writer.writerow(chunk_headers)
-        
-        for line in file:
-            if len(list) == 100:
-                url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, list))}"
-                response = requests.get(url)
-                data = f"{response.json()['msg']}"
-                writer.writerow([voxel, data])
-                list = []
-            else:
-                list.append(int(line))
-        url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, list))}"
-        response = requests.get(url)
-        data = f"{response.json()}"
-        writer.writerow([voxel, data])
-        list = []
-        
-        voxel+=1 
+def fifty_chunk(X: int, Y: int, Z: int ) -> None:
+    global count
+    global voxel
+    counter = 0
+    list = []
+    chunk_headers = [
+        "Voxel", "Section_Image"
+    ]
+    if is_valid_path():
+        created_file = rf"./Datasets/Outputs/Test/P4_Chunk_{count}.csv"
+        with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
+            writer = csv.writer(new_file)
+            writer.writerow(chunk_headers)
+            
+            for line in file:
+                if len(list) == 50:
+                    url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, list))}"
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        data = f"{response.json()['msg']}"
+                        writer.writerow([count, data])
+                        list = []
+                    else:
+                        print(f"ISSUE WITH QUERY {url}")
+                    break
+                else:
+                    list.append(int(line))
+                    counter+=1
+            
+            voxel+=1
+    print(f"done {counter}")
 
-
+def is_valid_path() -> bool:
+    global count
+    path = rf"./Datasets/Outputs/Test/P4_Chunk_{count}.csv"
+    print(path)
+    if os.path.exists(path):
+        return False
+    return True
 
 
 

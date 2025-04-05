@@ -1,29 +1,3 @@
-certifi==2024.12.14
-charset-normalizer==3.4.1
-contourpy==1.3.1
-cycler==0.12.1
-fonttools==4.56.0
-idna==3.10
-kiwisolver==1.4.8
-matplotlib==3.10.0
-MouseInfo==0.1.3
-numpy==2.2.2
-opencv-python==4.11.0.86
-packaging==24.2
-pandas==2.2.3
-pillow==11.1.0
-PyAutoGUI==0.9.54
-PyGetWindow==0.0.9
-PyMsgBox==1.0.9
-pyparsing==3.2.1
-pyperclip==1.8.2
-PyRect==0.2.0
-PyScreeze==0.1.30
-python-dateutil==2.9.0.post0
-pytweening==1.2.0
-pytz==2024.2
-requests==2.32.3
-simplejson==3.19.3
-six==1.17.0
-tzdata==2025.1
-urllib3==2.3.0
+version https://git-lfs.github.com/spec/v1
+oid sha256:9f87dbf2cc64cd5f5c7b6ad3100d701b4b1f333b48ec7c5fb65466ef51dfab5b
+size 530

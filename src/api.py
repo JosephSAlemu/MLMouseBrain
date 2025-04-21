@@ -113,46 +113,34 @@ def multiply_coordinate_for_microns() -> None:
 
 
 
-def image_to_reference(p5_voxel: int) -> None:
+def image_to_reference(section_image: int, x_coord: int, y_coord:int) -> None:
     """
-    takes all the p-4 section images associated with a p-56 voxels [1465 voxels]
+    takes in the section image for a gene and the centroid coordinates for the bin in that section image
 
     divides all the coordinates by 160 to get the reference space coordinates
 
-    p5_voxel values: 0 to 1464 (inclusive). [0,1464]
+    returns the result of that query as tuple of the voxel coordinates
     """
     
-    print(p5_voxel)
-    #r"./Datasets/Outputs
-    if is_valid_voxel(p5_voxel):
-
-        created_file = rf".\Datasets\Outputs\Voxels\P4_Voxel_{p5_voxel}.csv"
-
-        print(p5_voxel)
-        data = group_data(p5_voxel)
-
-        with open(created_file, mode ="a", newline="") as file:
-
-            writer = csv.writer(file)
-            writer.writerow(headers)
-
-            for mouse in data:
-                x = mouse['image_sync']['x']
-                y = mouse['image_sync']['y']
-                section_image = mouse['image_sync']['section_image_id']
-                url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image}.json?x={x}&y={y}"
-                response = requests.get(url)
-                if response.status_code == 200:
-                    data = f"{response.json()}"
-                    data = data.replace("'", '"')
-                    data = data.replace("True", "true")
-                    data = json.loads(data)
-                    voxel = data['msg']['image_to_reference']
-                    x,y,z = voxel['x']/160, voxel['y']/160, voxel['z']/160
-                    writer.writerow([x, y, z])
-                else:
-                    print(f"Failed to fetch data: {response.status_code}")
+    
+    url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image}.json?x={x_coord}&y={y_coord}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = f"{response.json()}"
+        data = data.replace("'", '"')
+        data = data.replace("True", "true")
+        data = json.loads(data)
+        voxel = data['msg']['image_to_reference']
+        x,y,z = voxel['x']/160, voxel['y']/160, voxel['z']/160
+        print(f"after division: x = {x} y = {y},z = {z}")
+        return (x, y, z)
     else:
-        print("Bug")
+        print(f"Failed to fetch data: {response.status_code}")
 
+def test() -> None:
+    result = image_to_reference(101383775, 9422.0, 4463.0)
+    print(result)
+    result = image_to_reference(101383775, 9272.0, 4463.0)
+    print(result)
 
+test()

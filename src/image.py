@@ -1,4 +1,5 @@
 import cv2
+import csv
 import json
 import numpy as np
 import pandas as pd
@@ -340,51 +341,55 @@ def calculate_density(gene: str) -> None:
         "Z",
         "Density"
     ]
-    density_measurements = []
+    with open(fr"Datasets/Outputs/{gene}.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(headers)
 
-    row = p4_file.loc[p4_file["Gene"] == gene]
+        density_measurements = []
 
-    lst = list(map(int, row["Images"][0].strip("{}").split(", ")))
-    for section_image_id in lst:
-        #load image if not present. If present, does nothing.
-        binarized_image(section_image_id)
-        image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
+        row = p4_file.loc[p4_file["Gene"] == gene]
 
-        height, width, channels = image.shape
-        print(f"height:{height} width:{width} channels:{channels}")
+        lst = list(map(int, row["Images"][0].strip("{}").split(", ")))
+        for section_image_id in lst:
+            #load image if not present. If present, does nothing.
+            binarized_image(section_image_id)
+            image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
+            
+            height, width, channels = image.shape
+            print(f"height:{height} width:{width} channels:{channels}")
 
-        boxes = get_valid_boxes(section_image_id)
-        print(boxes)
+            boxes = get_valid_boxes(section_image_id)
+            print(boxes)
 
-        #Reminder: ( (min_x,max_x),(min_y,max_y) )
-        for box in boxes:
-            x_points = (box[0][0],box[0][1])
-            y_points = (box[1][0],box[1][1])
+            #Reminder: ( (min_x,max_x),(min_y,max_y) )
+            for box in boxes:
+                x_points = (box[0][0],box[0][1])
+                y_points = (box[1][0],box[1][1])
 
-            expressed = 0
+                expressed = 0
 
-            print(f"coord are {box}")
-            print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
-            print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
+                print(f"coord are {box}")
+                print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
+                print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
 
-            for x in range(x_points[0], x_points[1], 1):
-                for y in range(y_points[0], y_points[1], 1):
-                    # Get the BGR values of the pixel
-                    b, g, r = image[y,x]
-                    # Print the coordinates and color values of the pixel
+                for x in range(x_points[0], x_points[1], 1):
+                    for y in range(y_points[0], y_points[1], 1):
+                        # Get the BGR values of the pixel
+                        b, g, r = image[y,x]
+                        # Print the coordinates and color values of the pixel
 
-                    if b > 0 or g > 0 or r > 0:
-                        #print(f"Pixel at ({x}, {y}): B={b}, G={g}, R={r}")
-                        expressed+=1
-            gene_expression = expressed/DENSITY
-            centroid = ((x_points[0]+x_points[1])/2, (y_points[0]+y_points[1])/2)
-            print(f"centroid = {centroid} density = {gene_expression}")
-            density_measurements.append(expressed/DENSITY)
+                        if b > 0 or g > 0 or r > 0:
+                            #print(f"Pixel at ({x}, {y}): B={b}, G={g}, R={r}")
+                            expressed+=1
+                gene_expression = expressed/DENSITY
+                centroid = ((x_points[0]+x_points[1])/2, (y_points[0]+y_points[1])/2)
+                print(f"centroid = {centroid} density = {gene_expression} image = {section_image_id}")
+                density_measurements.append(expressed/DENSITY)
 
 
-            #filename = "result.jpg"
+                #filename = "result.jpg"
 
-            #cv2.imwrite(filename, image)
+                #cv2.imwrite(filename, image)
     print(density_measurements)
     print(len(density_measurements))
 

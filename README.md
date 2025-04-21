@@ -3,6 +3,6 @@
 ## Steps to use
  - Create a virtual environment
 
- - Install all the dependencies in requirments.txt
+ - Install all the dependencies in requirements.txt
 
- - Use git lfs to install all the csv files, txt files, and jpg images.
+ - Download the Datasets folder from Josephswork/Datasets in the google drive and put the file in the MLMouseBrain File 

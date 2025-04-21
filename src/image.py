@@ -13,6 +13,7 @@ import matplotlib.image as mpimg
 
 
 
+voxel_chunks = get_all_chunks()
 
 def plot() -> None:
 
@@ -39,7 +40,6 @@ def plot() -> None:
 
     p4_file = pd.read_csv(r"./Datasets/Outputs/P4_Section_Data.csv")
 
-    voxel_chunks = get_all_chunks()
     # You have to loop through each dataset_id
     # For each section dataset id, you need to loop through the number of valid section image id's.
     for incrementor in range(1):
@@ -62,7 +62,6 @@ def plot() -> None:
                         id = new_row[ind]['image_sync']['section_image_id']
                         id = int(id)
                         if id == section_image:
-                            print("match")
                             points.append((   (new_row[ind]['image_sync']['x']) , (new_row[ind]['image_sync']['y'])  ))
 
             if len(points) > 1:
@@ -136,7 +135,7 @@ def plot() -> None:
             plt.grid(True, which='both', linewidth=0.5)
             plt.legend()
             plt.axis("equal")  
-            plt.title(f"{p4_file.iloc[incrementor]["Gene"]}: {section_image}")
+            plt.title(f"{p4_file.iloc[incrementor]['Gene']}: {section_image}")
             plt.show(block=False)
             plt.pause(0.1)
             # Fix aspect ratio to ensure correct spacing
@@ -157,7 +156,6 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     has an array of all the valid boxes.
     '''
 
-    voxel_chunks = get_all_chunks()
 
         # Second loop for all the section images associated with the section_dataset_id
 
@@ -385,6 +383,11 @@ def timing() -> None:
     execution_time = end_time - start_time
 
     print(f"Execution time: {execution_time} seconds")
+
+def test(section_image_id: int) -> None:
+    p4_file = pd.read_csv(r"Datasets\Outputs\P4_Image_Coords.csv")
+    row = p4_file.loc[p4_file["Image"] == section_image_id]
+
 
 
 plot()

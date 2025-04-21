@@ -8,12 +8,12 @@ import time
 import ast
 from matplotlib.patches import Rectangle
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
-from validation import is_valid_image
+from validation import (is_valid_image)
 from constants import DENSITY
 import matplotlib.image as mpimg
 
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
-p4_file = pd.read_csv(r"Datasets\Outputs\P4_Section_Data.csv")
+p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
 
 def plot() -> None:
@@ -78,6 +78,8 @@ def plot() -> None:
                 x_max+=25
                 y_max+=25
 
+            print(f"ymin = {y_min}, ymax = {y_max}, xmin = {x_min}, xmax = {x_max}")
+
             grid_x = np.arange(x_min, x_max+50, 50)
             grid_y = np.arange(y_min, y_max+50, 50)
 
@@ -115,7 +117,7 @@ def plot() -> None:
                     valid_boxes.update(dilated)
 
             print(valid_boxes)
-            seed_points = [((p[0][0]+p[0][1])//2, (p[1][0]+p[1][1])//2) for p in valid_boxes]
+            seed_points = [((p[0][0]+p[0][1])/2, (p[1][0]+p[1][1])/2) for p in valid_boxes]
 
             plt.scatter(*zip(*points), marker='s', color='red', s=10, label="Seed Points")
             if len(points) > 1:
@@ -170,8 +172,7 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     for coord in row:
         points.append(coord)
 
-
-            #Basically get all the section images with a specific id across all chunks (ALL TOTAL SECTION IMAGES) and store their points.
+    print(points)
     
 
     if len(points) > 1:
@@ -330,6 +331,15 @@ def calculate_density(gene: str) -> None:
     3. retrieve all valid boxes from a function (currently called plot function)
     4. use those box coordinates as bounds and measure density in each valid box.
     '''
+
+    headers = [
+        "Image",
+        "Bin",
+        "X",
+        "Y",
+        "Z",
+        "Density"
+    ]
     density_measurements = []
 
     row = p4_file.loc[p4_file["Gene"] == gene]
@@ -344,20 +354,21 @@ def calculate_density(gene: str) -> None:
         print(f"height:{height} width:{width} channels:{channels}")
 
         boxes = get_valid_boxes(section_image_id)
+        print(boxes)
 
         #Reminder: ( (min_x,max_x),(min_y,max_y) )
         for box in boxes:
-            start_points = (box[0][0],box[1][0])
-            end_points = (box[0][1],box[1][1])
+            x_points = (box[0][0],box[0][1])
+            y_points = (box[1][0],box[1][1])
 
             expressed = 0
 
             print(f"coord are {box}")
-            print(f"start_x is {start_points[0]} end_x is {end_points[0]}")
-            print(f"start_y is {start_points[1]} end_y is {end_points[1]}")
-    
-            for x in range(start_points[0], end_points[0]):
-                for y in range(start_points[1], end_points[1]):
+            print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
+            print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
+
+            for x in range(x_points[0], x_points[1], 1):
+                for y in range(y_points[0], y_points[1], 1):
                     # Get the BGR values of the pixel
                     b, g, r = image[y,x]
                     # Print the coordinates and color values of the pixel
@@ -365,6 +376,9 @@ def calculate_density(gene: str) -> None:
                     if b > 0 or g > 0 or r > 0:
                         #print(f"Pixel at ({x}, {y}): B={b}, G={g}, R={r}")
                         expressed+=1
+            gene_expression = expressed/DENSITY
+            centroid = ((x_points[0]+x_points[1])/2, (y_points[0]+y_points[1])/2)
+            print(f"centroid = {centroid} density = {gene_expression}")
             density_measurements.append(expressed/DENSITY)
 
 

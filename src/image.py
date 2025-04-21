@@ -5,15 +5,16 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import requests
 import time
+import ast
 from matplotlib.patches import Rectangle
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
 from validation import is_valid_image
 from constants import DENSITY
 import matplotlib.image as mpimg
 
+p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
+p4_file = pd.read_csv(r"Datasets\Outputs\P4_Section_Data.csv")
 
-
-voxel_chunks = get_all_chunks()
 
 def plot() -> None:
 
@@ -38,31 +39,30 @@ def plot() -> None:
 
     '''
 
-    p4_file = pd.read_csv(r"./Datasets/Outputs/P4_Section_Data.csv")
+
 
     # You have to loop through each dataset_id
     # For each section dataset id, you need to loop through the number of valid section image id's.
     for incrementor in range(1):
         
         lst = list(map(int, p4_file.iloc[incrementor]["Images"].strip("{}").split(", ")))
+        print(lst)
         # Second loop for all the section images associated with the section_dataset_id
         for ind in range(len(lst)):
-            section_image = lst[ind]
+            section_image_id = lst[ind]
 
             #x_coords = []
             #y_coords =[]
             # NP arrange
             points = []
 
-            #Basically get all the section images with a specific id across all chunks (ALL TOTAL SECTION IMAGES) and store their points.
-            for file in voxel_chunks:
-                for row in file['Section_Image']:
-                    new_row = json.loads(row.replace("\'","\""))
-                    for ind in range(len(new_row)):
-                        id = new_row[ind]['image_sync']['section_image_id']
-                        id = int(id)
-                        if id == section_image:
-                            points.append((   (new_row[ind]['image_sync']['x']) , (new_row[ind]['image_sync']['y'])  ))
+            row = p4_image_coords.loc[p4_image_coords["Image"] == section_image_id]
+            row = row["Coordinates"].iloc[0]
+            print(row)
+            row = ast.literal_eval(row)
+            for coord in row:
+                points.append(coord)
+
 
             if len(points) > 1:
                 x_min = min(p[0] for p in points)
@@ -135,7 +135,7 @@ def plot() -> None:
             plt.grid(True, which='both', linewidth=0.5)
             plt.legend()
             plt.axis("equal")  
-            plt.title(f"{p4_file.iloc[incrementor]['Gene']}: {section_image}")
+            plt.title(f"{p4_file.iloc[incrementor]['Gene']}: {section_image_id}")
             plt.show(block=False)
             plt.pause(0.1)
             # Fix aspect ratio to ensure correct spacing
@@ -163,16 +163,16 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
             #y_coords =[]
             # NP arrange
     points = []
+    row = p4_image_coords.loc[p4_image_coords["Image"] == section_image_id]
+    row = row["Coordinates"].iloc[0]
+    print(row)
+    row = ast.literal_eval(row)
+    for coord in row:
+        points.append(coord)
+
 
             #Basically get all the section images with a specific id across all chunks (ALL TOTAL SECTION IMAGES) and store their points.
-    for file in voxel_chunks:
-        for row in file['Section_Image']:
-            new_row = json.loads(row.replace("\'","\""))
-            for ind in range(len(new_row)):
-                id = new_row[ind]['image_sync']['section_image_id']
-                id = int(id)
-                if id == section_image_id:
-                    points.append((   (new_row[ind]['image_sync']['x']) , (new_row[ind]['image_sync']['y'])  ))
+    
 
     if len(points) > 1:
         x_min = min(p[0] for p in points)
@@ -332,7 +332,6 @@ def calculate_density(gene: str) -> None:
     '''
     density_measurements = []
 
-    p4_file = pd.read_csv(r"Datasets\Outputs\P4_Section_Data.csv")
     row = p4_file.loc[p4_file["Gene"] == gene]
 
     lst = list(map(int, row["Images"][0].strip("{}").split(", ")))
@@ -385,9 +384,13 @@ def timing() -> None:
     print(f"Execution time: {execution_time} seconds")
 
 def test(section_image_id: int) -> None:
-    p4_file = pd.read_csv(r"Datasets\Outputs\P4_Image_Coords.csv")
+    p4_file = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
     row = p4_file.loc[p4_file["Image"] == section_image_id]
+    row = row["Coordinates"][0]
+    row = ast.literal_eval(row)
+    for i in row:
+        print(i)
 
 
 
-plot()
+calculate_density("Tcf21")

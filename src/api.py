@@ -113,7 +113,7 @@ def multiply_coordinate_for_microns() -> None:
 
 
 
-def image_to_reference(section_image: int, x_coord: int, y_coord:int) -> None:
+def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> None:
     """
     takes in the section image for a gene and the centroid coordinates for the bin in that section image
 
@@ -123,7 +123,7 @@ def image_to_reference(section_image: int, x_coord: int, y_coord:int) -> None:
     """
     
     
-    url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image}.json?x={x_coord}&y={y_coord}"
+    url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image_id}.json?x={x_coord}&y={y_coord}"
     response = requests.get(url)
     if response.status_code == 200:
         data = f"{response.json()}"
@@ -132,15 +132,14 @@ def image_to_reference(section_image: int, x_coord: int, y_coord:int) -> None:
         data = json.loads(data)
         voxel = data['msg']['image_to_reference']
         x,y,z = voxel['x']/160, voxel['y']/160, voxel['z']/160
-        print(f"after division: x = {x} y = {y},z = {z}")
+        #print(f"after division: x = {x} y = {y},z = {z}")
         return (x, y, z)
     else:
         print(f"Failed to fetch data: {response.status_code}")
 
 def test() -> None:
     result = image_to_reference(101383775, 9422.0, 4463.0)
-    print(result)
-    result = image_to_reference(101383775, 9272.0, 4463.0)
+    x,y,z = result
+    print(f"x = {x}, y = {y}, z = {z}")
     print(result)
 
-test()

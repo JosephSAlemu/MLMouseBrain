@@ -11,6 +11,7 @@ from matplotlib.patches import Rectangle
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
 from validation import (is_valid_image)
 from constants import DENSITY
+from api import image_to_reference
 import matplotlib.image as mpimg
 
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
@@ -168,12 +169,12 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     points = []
     row = p4_image_coords.loc[p4_image_coords["Image"] == section_image_id]
     row = row["Coordinates"].iloc[0]
-    print(row)
+    #print(row)
     row = ast.literal_eval(row)
     for coord in row:
         points.append(coord)
 
-    print(points)
+    #print(points)
     
 
     if len(points) > 1:
@@ -193,8 +194,8 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     grid_x = np.arange(x_min, x_max+50, 50)
     grid_y = np.arange(y_min, y_max+50, 50)
 
-    print(f"X bins: {len(grid_x)}\n\n")
-    print(f"Y bins: {len(grid_y)}\n")
+    #print(f"X bins: {len(grid_x)}\n\n")
+    #print(f"Y bins: {len(grid_y)}\n")
 
             # Keep track of of the x coordinates and y coordinates in a tuple of tuples
             # For example ((xmin,xmax),(ymin,ymax))
@@ -339,9 +340,9 @@ def calculate_density(gene: str) -> None:
         "X",
         "Y",
         "Z",
-        "Density"
+        "Density_2500"
     ]
-    with open(fr"Datasets/Outputs/{gene}.csv", "w") as file:
+    with open(fr"Datasets/Outputs/Voxels/{gene}.csv", "w") as file:
         writer = csv.writer(file)
         writer.writerow(headers)
 
@@ -356,10 +357,10 @@ def calculate_density(gene: str) -> None:
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
             
             height, width, channels = image.shape
-            print(f"height:{height} width:{width} channels:{channels}")
+            #print(f"height:{height} width:{width} channels:{channels}")
 
             boxes = get_valid_boxes(section_image_id)
-            print(boxes)
+            #print(boxes)
 
             #Reminder: ( (min_x,max_x),(min_y,max_y) )
             for box in boxes:
@@ -368,9 +369,9 @@ def calculate_density(gene: str) -> None:
 
                 expressed = 0
 
-                print(f"coord are {box}")
-                print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
-                print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
+                #print(f"coord are {box}")
+                #print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
+                #print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
 
                 for x in range(x_points[0], x_points[1], 1):
                     for y in range(y_points[0], y_points[1], 1):
@@ -382,16 +383,21 @@ def calculate_density(gene: str) -> None:
                             #print(f"Pixel at ({x}, {y}): B={b}, G={g}, R={r}")
                             expressed+=1
                 gene_expression = expressed/DENSITY
-                centroid = ((x_points[0]+x_points[1])/2, (y_points[0]+y_points[1])/2)
-                print(f"centroid = {centroid} density = {gene_expression} image = {section_image_id}")
-                density_measurements.append(expressed/DENSITY)
+                centroid_x = (x_points[0]+x_points[1])/2
+                centroid_y = (y_points[0]+y_points[1])/2
+                centroid = (centroid_x, centroid_y)
+                #print(f"centroid = {centroid} density = {gene_expression} image = {section_image_id}")
+                voxel = image_to_reference(section_image_id, centroid_x, centroid_y)
+                x,y,z = voxel
+                writer.writerow([section_image_id, box, x, y, z, gene_expression])
+                #density_measurements.append(expressed/DENSITY)
 
 
                 #filename = "result.jpg"
 
                 #cv2.imwrite(filename, image)
-    print(density_measurements)
-    print(len(density_measurements))
+    #print(density_measurements)
+    #print(len(density_measurements))
 
 
 def timing() -> None:
@@ -402,14 +408,4 @@ def timing() -> None:
 
     print(f"Execution time: {execution_time} seconds")
 
-def test(section_image_id: int) -> None:
-    p4_file = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
-    row = p4_file.loc[p4_file["Image"] == section_image_id]
-    row = row["Coordinates"][0]
-    row = ast.literal_eval(row)
-    for i in row:
-        print(i)
-
-
-
-calculate_density("Tcf21")
+timing()

@@ -5,3 +5,5 @@ headers = [
 ]
 
 DENSITY = 2500
+
+DISTRIBUTED = 259

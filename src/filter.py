@@ -4,7 +4,7 @@ import json
 import csv
 import requests
 from validation import is_valid_voxel
-from constants import headers
+from constants import headers, DISTRIBUTED
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
 def filter_p4_data() -> None:
@@ -339,5 +339,29 @@ def get_average() -> None:
         voxel+=1
 
 
+def partition_genes() -> None:
+    file = pd.read_csv(r"./Datasets/Outputs/P4_Section_Data.csv")
+    columns = file.columns.tolist()
+    laptop = 1
+    count = 1
+    writer = None 
+    laptop_file = open(rf"./Datasets/Outputs/P4_Section_Laptop{laptop}.csv", "w", newline="")
+    writer = csv.writer(laptop_file)
+    writer.writerow(columns)
+    for row in file.to_numpy():
+        if count % DISTRIBUTED == 0:
+            writer.writerow(row)
+            laptop_file.close()
+            laptop+=1
+            laptop_file = open(rf"./Datasets/Outputs/P4_Section_Laptop{laptop}.csv", "w", newline="")
+            writer = csv.writer(laptop_file)
+            writer.writerow(columns)
+            count+=1
+        else:
+            count+=1
+            writer.writerow(row)
+    laptop_file.close()
 
-# Write the cleaned content back to the same file
+        
+
+

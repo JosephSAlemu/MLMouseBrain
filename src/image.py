@@ -342,7 +342,7 @@ def calculate_density(gene: str) -> None:
         "Z",
         "Density_2500"
     ]
-    with open(fr"Datasets/Outputs/Voxels/{gene}.csv", "w") as file:
+    with open(fr"Datasets/Outputs/New_Voxels/{gene}.csv", "w") as file:
         writer = csv.writer(file)
         writer.writerow(headers)
 
@@ -350,7 +350,7 @@ def calculate_density(gene: str) -> None:
 
         row = p4_file.loc[p4_file["Gene"] == gene]
 
-        lst = list(map(int, row["Images"][0].strip("{}").split(", ")))
+        lst = list(map(int, row.iloc[0]["Images"].strip("{}").split(", ")))
         for section_image_id in lst:
             #load image if not present. If present, does nothing.
             binarized_image(section_image_id)
@@ -402,7 +402,13 @@ def calculate_density(gene: str) -> None:
 
 def timing() -> None:
     start_time = time.perf_counter()
-    calculate_density("Tcf21")
+    number = -1
+    with open(r"LaptopNumber.txt", "r") as file:
+        for num in file:
+            number = int(num)
+    file = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{number}.csv")
+    for gene in file["Gene"]:
+        calculate_density(gene)
     end_time = time.perf_counter()
     execution_time = end_time - start_time
 

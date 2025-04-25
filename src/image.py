@@ -372,7 +372,7 @@ def calculate_density(gene: str) -> None:
                 x,y,z = voxel
                 writer.writerow([section_image_id, box, x, y, z, gene_expression])
 
-    #upload_file(path, f"{gene}.csv")
+    upload_file(path, f"{gene}.csv")
 
 
 def execute() -> None:

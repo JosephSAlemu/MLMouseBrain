@@ -11,7 +11,7 @@ from matplotlib.patches import Rectangle
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY
-from api import (image_to_reference, upload_file)
+from api import (image_to_reference, upload_file, directories)
 import matplotlib.image as mpimg
 
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
@@ -376,6 +376,7 @@ def calculate_density(gene: str) -> None:
 
 
 def execute() -> None:
+    directories()
     number = -1
     with open(r"LaptopNumber.txt", "r") as file:
         for num in file:

@@ -183,7 +183,6 @@ def directories() -> None:
         upload_file(file_path, file_name)
         
 
-directories()
 
 
 

@@ -166,7 +166,7 @@ def upload_file(file_path: str, file_name: str) -> None:
     client_sftp = client.open_sftp()
 
     dest_path = os.getenv("DEST_PATH")
-    client_sftp.put(file_path, os.path.join(dest_path, file_name).replace("\\,/"))
+    client_sftp.put(file_path, os.path.join(dest_path, file_name).replace("\\","/"))
     
 
 

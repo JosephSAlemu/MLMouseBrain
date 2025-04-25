@@ -372,7 +372,7 @@ def calculate_density(gene: str) -> None:
                 x,y,z = voxel
                 writer.writerow([section_image_id, box, x, y, z, gene_expression])
 
-    upload_file(path, f"{gene}.csv")
+    #upload_file(path, f"{gene}.csv")
 
 
 def execute() -> None:
@@ -383,7 +383,7 @@ def execute() -> None:
     file = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{number}.csv")
     for gene in file["Gene"]:
         if is_valid_p4_voxel_gene(gene):
-            test(gene)
+            calculate_density(gene)
 
 
 execute()

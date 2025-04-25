@@ -9,9 +9,9 @@ import time
 import ast
 from matplotlib.patches import Rectangle
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
-from validation import (is_valid_image)
+from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY
-from api import image_to_reference
+from api import (image_to_reference, upload_file)
 import matplotlib.image as mpimg
 
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
@@ -226,14 +226,6 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     return(valid_boxes)
         
 
-
-def test() -> None:
-    file = pd.read_csv(r"./Datasets/Outputs/P4_Section_Data.csv")
-    #converts string to a list of integers
-    row = file.loc[file["Gene"] == "Tcf21"]
-    print(row["Images"][0])
-
-
 def binarized_image(section_image: int) -> None:
     '''
     download the binarized image if it's not present
@@ -342,11 +334,10 @@ def calculate_density(gene: str) -> None:
         "Z",
         "Density_2500"
     ]
-    with open(fr"Datasets/Outputs/New_Voxels/{gene}.csv", "w", newline="") as file:
+    path = fr"./Datasets/Outputs/New_Voxels/{gene}.csv"
+    with open(path, "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(headers)
-
-        density_measurements = []
 
         row = p4_file.loc[p4_file["Gene"] == gene]
 
@@ -357,10 +348,8 @@ def calculate_density(gene: str) -> None:
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
             
             height, width, channels = image.shape
-            #print(f"height:{height} width:{width} channels:{channels}")
 
             boxes = get_valid_boxes(section_image_id)
-            #print(boxes)
 
             #Reminder: ( (min_x,max_x),(min_y,max_y) )
             for box in boxes:
@@ -369,49 +358,32 @@ def calculate_density(gene: str) -> None:
 
                 expressed = 0
 
-                #print(f"coord are {box}")
-                #print(f"start_x is {x_points[0]} end_x is {x_points[1]}")
-                #print(f"start_y is {y_points[0]} end_y is {y_points[1]}")
-
+               
                 for x in range(x_points[0], x_points[1], 1):
                     for y in range(y_points[0], y_points[1], 1):
-                        # Get the BGR values of the pixel
                         b, g, r = image[y,x]
-                        # Print the coordinates and color values of the pixel
 
                         if b > 0 or g > 0 or r > 0:
-                            #print(f"Pixel at ({x}, {y}): B={b}, G={g}, R={r}")
                             expressed+=1
                 gene_expression = expressed/DENSITY
                 centroid_x = (x_points[0]+x_points[1])/2
                 centroid_y = (y_points[0]+y_points[1])/2
-                centroid = (centroid_x, centroid_y)
-                #print(f"centroid = {centroid} density = {gene_expression} image = {section_image_id}")
                 voxel = image_to_reference(section_image_id, centroid_x, centroid_y)
                 x,y,z = voxel
                 writer.writerow([section_image_id, box, x, y, z, gene_expression])
-                #density_measurements.append(expressed/DENSITY)
+
+    upload_file(path, f"{gene}.csv")
 
 
-                #filename = "result.jpg"
-
-                #cv2.imwrite(filename, image)
-    #print(density_measurements)
-    #print(len(density_measurements))
-
-
-def timing() -> None:
-    start_time = time.perf_counter()
+def execute() -> None:
     number = -1
     with open(r"LaptopNumber.txt", "r") as file:
         for num in file:
             number = int(num)
     file = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{number}.csv")
     for gene in file["Gene"]:
-        calculate_density(gene)
-    end_time = time.perf_counter()
-    execution_time = end_time - start_time
+        if is_valid_p4_voxel_gene(gene):
+            test(gene)
 
-    print(f"Execution time: {execution_time} seconds")
 
-timing()
+execute()

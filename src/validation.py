@@ -21,8 +21,19 @@ def is_valid_chunk(path: str, count:int) -> bool:
         return False
     return True
 
+def is_valid_p4_voxel_gene(gene: str) -> bool:
+    """
+    checks if the file is
+    """
+    path = rf"./Datasets/Outputs/New_Voxels/{gene}.csv"
+    if os.path.exists(path):
+        return False
+    return True
 
 def is_valid_voxel(count: int) -> bool:
+    """
+    deprecated method
+    """
     path = rf".\Datasets\Outputs\Voxels\P4_Voxel_{count}.csv"
     path_exists = os.path.exists(path)
     if path_exists:

@@ -2,12 +2,16 @@ import pandas as pd
 import requests
 import json
 import csv
+import google.auth
+import os
+import paramiko
+from dotenv import load_dotenv, dotenv_values
 from filter import group_data
 from constants import SIZE, headers
 from validation import is_valid_voxel, is_valid_chunk
 
 #Number of p-56 voxels, size of the NewDenC file, the number of p4 chunks
-
+load_dotenv()
 def api_calls() -> None:
     count = 0
     file = pd.read_csv(r'./Datasets/Outputs/NewDenC_Microns.csv')
@@ -137,9 +141,34 @@ def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> None
     else:
         print(f"Failed to fetch data: {response.status_code}")
 
-def test() -> None:
-    result = image_to_reference(101383775, 9422.0, 4463.0)
-    x,y,z = result
-    print(f"x = {x}, y = {y}, z = {z}")
-    print(result)
+def upload_file(file_path: str, file_name: str) -> None:
+ # Establishing SSH client for the source server
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"))
+
+    client_sftp = client.open_sftp()
+
+    dest_path = os.getenv("DEST_PATH")
+    client_sftp.put(file_path, os.path.join(dest_path, file_name))
+    
+
+
+    client.close()
+    client_sftp.close()
+
+def directories() -> None:
+    path = r"./Datasets/Outputs/New_Voxels"
+    directory = os.fsencode(path)
+  
+    for file in os.listdir(directory):
+        file_name = os.fsdecode(file)
+        file_path = f"{path}/{file_name}"
+        upload_file(file_path, file_name)
+        
+
+directories()
+
+
+
 

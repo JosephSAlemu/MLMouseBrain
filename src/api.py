@@ -4,10 +4,25 @@ import json
 import csv
 import os
 import paramiko
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
 from filter import group_data
 from constants import SIZE, headers
 from validation import is_valid_voxel, is_valid_chunk
+
+
+#for retrying requests
+session = requests.Session()
+retries = Retry(
+    total=5,
+    backoff_factor=1,  # 1s, 2s, 4s, 8s, 16s delays
+    status_forcelist=[502, 503, 504],
+    allowed_methods=["GET"]
+)
+adapter = HTTPAdapter(max_retries=retries)
+session.mount("http://", adapter)
+session.mount("https://", adapter)
 
 #Number of p-56 voxels, size of the NewDenC file, the number of p4 chunks
 load_dotenv()
@@ -116,7 +131,7 @@ def multiply_coordinate_for_microns() -> None:
 
 
 
-def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> None:
+def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> tuple | None:
     """
     takes in the section image for a gene and the centroid coordinates for the bin in that section image
 
@@ -127,8 +142,9 @@ def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> None
     
     
     url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image_id}.json?x={x_coord}&y={y_coord}"
-    response = requests.get(url)
-    if response.status_code == 200:
+    try:
+        response = session.get(url)
+        response.raise_for_status()
         data = f"{response.json()}"
         data = data.replace("'", '"')
         data = data.replace("True", "true")
@@ -136,9 +152,10 @@ def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> None
         voxel = data['msg']['image_to_reference']
         x,y,z = voxel['x']/160, voxel['y']/160, voxel['z']/160
         #print(f"after division: x = {x} y = {y},z = {z}")
-        return (x, y, z)
-    else:
-        print(f"Failed to fetch data: {response.status_code}")
+        return (x, y, z)        
+    except requests.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
 
 def upload_file(file_path: str, file_name: str) -> None:
  # Establishing SSH client for the source server

@@ -342,7 +342,7 @@ def calculate_density(gene: str) -> None:
         "Z",
         "Density_2500"
     ]
-    with open(fr"Datasets/Outputs/New_Voxels/{gene}.csv", "w") as file:
+    with open(fr"Datasets/Outputs/New_Voxels/{gene}.csv", "w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(headers)
 

@@ -3,6 +3,7 @@ import os
 import json
 import csv
 import requests
+import paramiko
 from validation import is_valid_voxel
 from constants import headers, DISTRIBUTED
 
@@ -362,6 +363,35 @@ def partition_genes() -> None:
             writer.writerow(row)
     laptop_file.close()
 
-        
+def current_files() -> None:
+    """
+    checks the remote servers files and determines which laptop in the distributed system might've errored
 
+    Why do this?
+
+    I can't access the pc's physically, so if there is an error on one device I can retrieve the rest of the genes locally
+
+    How?
+
+    Each PC is given a P4_Section_Laptop#.csv file. So if I see that one file is barely progressing, I can run it locally
+    """
+    count = 1
+    genes = []
+    present = []
+    with open(rf"./Datasets/Outputs/result.txt", "r") as file:
+        for i in file:
+            gene = i.replace(" ", "").replace("\n", "").split(".csv")[:-1:]
+            genes.extend(gene)
+    while count <= 8:
+        out_file = pd.read_csv(rf"Datasets/Outputs/P4_Section_Laptop{count}.csv")
+        for gene in out_file["Gene"]:
+            if gene in genes:
+                present.append(gene)
+        with open(rf"./Datasets/Outputs/Loaded/P4_Laptop{count}.txt", "w") as file:
+            for gene in present:
+                file.write(f"{gene}\n")
+        present = []
+        count+=1
+
+        
 

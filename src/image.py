@@ -194,8 +194,9 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     grid_x = np.arange(x_min, x_max+50, 50)
     grid_y = np.arange(y_min, y_max+50, 50)
 
-    #print(f"X bins: {len(grid_x)}\n\n")
-    #print(f"Y bins: {len(grid_y)}\n")
+    print(points)
+    print(f"X bins: {grid_x}\n\n")
+    print(f"Y bins: {grid_y}\n")
 
             # Keep track of of the x coordinates and y coordinates in a tuple of tuples
             # For example ((xmin,xmax),(ymin,ymax))
@@ -223,6 +224,9 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
             index = binary_search(boxes, len(grid_y)-1, seed)
             dilated = binary_dilation(boxes, len(grid_y)-1, index)
             valid_boxes.update(dilated)
+    else:
+        valid_boxes.update(boxes)
+
     return(valid_boxes)
         
 
@@ -376,7 +380,7 @@ def calculate_density(gene: str) -> None:
 
 
 def execute() -> None:
-    directories()
+    #directories()
     number = -1
     with open(r"LaptopNumber.txt", "r") as file:
         for num in file:
@@ -385,6 +389,5 @@ def execute() -> None:
     for gene in file["Gene"]:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
-
 
 execute()

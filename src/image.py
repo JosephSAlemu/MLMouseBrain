@@ -395,4 +395,3 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
 
-calculate_density("Pdgfrb")

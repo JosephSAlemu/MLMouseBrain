@@ -117,7 +117,8 @@ def plot() -> None:
                     index = binary_search(boxes, len(grid_y)-1, seed)
                     dilated = binary_dilation(boxes, len(grid_y)-1, index)
                     valid_boxes.update(dilated)
-
+            else:
+                valid_boxes.update(boxes)
             print(valid_boxes)
             seed_points = [((p[0][0]+p[0][1])/2, (p[1][0]+p[1][1])/2) for p in valid_boxes]
 
@@ -193,10 +194,6 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
 
     grid_x = np.arange(x_min, x_max+50, 50)
     grid_y = np.arange(y_min, y_max+50, 50)
-
-    print(points)
-    print(f"X bins: {grid_x}\n\n")
-    print(f"Y bins: {grid_y}\n")
 
             # Keep track of of the x coordinates and y coordinates in a tuple of tuples
             # For example ((xmin,xmax),(ymin,ymax))
@@ -351,17 +348,25 @@ def calculate_density(gene: str) -> None:
             binarized_image(section_image_id)
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
             
+            #width = x
+            #height = y
             height, width, channels = image.shape
 
-            boxes = get_valid_boxes(section_image_id)
+            boxes = get_valid_boxes(section_image_id)            
+
+
 
             #Reminder: ( (min_x,max_x),(min_y,max_y) )
             for box in boxes:
+                
                 x_points = (box[0][0],box[0][1])
-                y_points = (box[1][0],box[1][1])
+
+                if x_points[1]-1 > width or y_points[1]-1 > height:
+                    #if the points are out of bounds of the image itself, skip this bin.
+                    writer.writerow([section_image_id, box, "error", "error", "error", "error"])
+                    continue
 
                 expressed = 0
-
                
                 for x in range(x_points[0], x_points[1], 1):
                     for y in range(y_points[0], y_points[1], 1):
@@ -390,4 +395,4 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
 
-execute()
+calculate_density("Pdgfrb")

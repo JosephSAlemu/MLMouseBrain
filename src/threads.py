@@ -1,41 +1,51 @@
 from threading import Thread
+from image import calculate_density
 #from api import chunk
 import pandas as pd
 
 
-#Literally trash this. Race conditions may ruin the entire thing.
 class Threads:
-    def __init__(self, threads):
-        self.threads = threads
-        self.range = None
-        self.file = None
-        self.counter = 0
+    def __init__(self, start, stop, file):
+        self.start = start
+        self.stop = stop
+        self.file = file
         pass
-    
-    def threaded_chunks_function(self, thread_id) -> None:
-        if self.file == None:
-            file = pd.read_csv(r'./Datasets/Outputs/NewDenC_Microns.csv')
-            self.file = file
-            self.range = int(len(file['X'])//5)
-        start = thread_id * self.range
-        end = start + self.range - 1
-        while start <= end:
-            #chunk(self.file['X'][start], self.file['Y'][start], self.file['Z'][start])
-            start+=1
-        print("\n")
+            
+
+    def retrieve_voxels(self) -> None:
+        file = pd.read_csv(self.file)
+        
+        print(f"start: {self.start}")
+        print(f"stop: {self.stop}")
+        for index in range(self.start, self.stop+1):
+            gene = file.iloc[index]["Gene"]
+            print(f"index: {index} gene: {gene}")
+
+            calculate_density(gene)
         
         
 
 if __name__ == "__main__":
-    instance = Threads(5)
+    file = rf"./Datasets/Outputs/P4_Section_Laptop8.csv"
+    length = 259
+    count = 0
+    thread_count = 7
+    thread_genes = length//thread_count
+    
+    thread_instances = []
     threads = []
-    for j in range(instance.threads):
+    while count < length:
+        #append threads in a list
+        thread_instances.append(Threads(count, count+thread_genes-1, file))
+        count+=thread_genes
 
-        thread = Thread(target = instance.threaded_chunks_function, args = [j] )
+    for instance in thread_instances:
+        
+
+        thread = Thread(target = instance.retrieve_voxels)
         threads.append(thread)
         thread.start()
     
     for thread in threads:
         thread.join()
     
-    print(instance.counter)

@@ -15,18 +15,15 @@ class Threads:
     def retrieve_voxels(self) -> None:
         file = pd.read_csv(self.file)
         
-        print(f"start: {self.start}")
-        print(f"stop: {self.stop}")
         for index in range(self.start, self.stop+1):
             gene = file.iloc[index]["Gene"]
-            print(f"index: {index} gene: {gene}")
-
             calculate_density(gene)
-        
-        
 
-if __name__ == "__main__":
-    file = rf"./Datasets/Outputs/P4_Section_Laptop8.csv"
+def use_threads(file_number: int) -> None:
+    '''
+    Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
+    '''
+    file = rf"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv"
     length = 259
     count = 0
     thread_count = 7
@@ -48,4 +45,9 @@ if __name__ == "__main__":
     
     for thread in threads:
         thread.join()
+
+        
+
+if __name__ == "__main__":
+    use_threads(8)
     

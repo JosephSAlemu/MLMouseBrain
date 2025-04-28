@@ -360,6 +360,8 @@ def calculate_density(gene: str) -> None:
             for box in boxes:
                 
                 x_points = (box[0][0],box[0][1])
+                y_points = (box[1][0],box[1][1])
+
 
                 if x_points[1]-1 > width or y_points[1]-1 > height:
                     #if the points are out of bounds of the image itself, skip this bin.
@@ -385,11 +387,10 @@ def calculate_density(gene: str) -> None:
 
 
 def execute() -> None:
+    """
+    Deprecated method
+    """
     #directories()
-    number = -1
-    with open(r"LaptopNumber.txt", "r") as file:
-        for num in file:
-            number = int(num)
     file = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{number}.csv")
     for gene in file["Gene"]:
         if is_valid_p4_voxel_gene(gene):

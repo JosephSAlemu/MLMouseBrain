@@ -37,8 +37,6 @@ def use_threads(file_number: int) -> None:
         count+=thread_genes
 
     for instance in thread_instances:
-        
-
         thread = Thread(target = instance.retrieve_voxels)
         threads.append(thread)
         thread.start()
@@ -49,5 +47,6 @@ def use_threads(file_number: int) -> None:
         
 
 if __name__ == "__main__":
-    use_threads(8)
+    #use_threads(8)
+    ...
     

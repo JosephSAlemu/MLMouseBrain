@@ -23,7 +23,7 @@ def is_valid_chunk(path: str, count:int) -> bool:
 
 def is_valid_p4_voxel_gene(gene: str) -> bool:
     """
-    checks if the file is
+    checks if the gene file exists.
     """
     path = rf"./Datasets/Outputs/New_Voxels/{gene}.csv"
     if os.path.exists(path):

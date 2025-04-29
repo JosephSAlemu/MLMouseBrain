@@ -158,7 +158,10 @@ def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> tupl
         return None
 
 def upload_file(file_path: str, file_name: str) -> None:
- # Establishing SSH client for the source server
+    """
+    Uploads the gene files with voxels to remote linux server
+    """
+    # Establishing SSH client for the source server
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"))
@@ -173,6 +176,27 @@ def upload_file(file_path: str, file_name: str) -> None:
     client.close()
     client_sftp.close()
 
+def retrieve_files() -> None:
+    """
+    Retreves all the gene files in the remote linux server and puts it into New_Voxels directory
+    """
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"))
+
+    sftp = client.open_sftp()
+    files = []
+
+    local_path = "Datasets/Outputs/New_Voxels"
+    remote_path = os.getenv("DEST_PATH")
+
+    for f in sftp.listdir(remote_path):
+        remote = os.path.join(remote_path, f)
+        local = os.path.join(local_path, f)
+
+        sftp.get(remote, local) 
+    
+
 def directories() -> None:
     path = r"./Datasets/Outputs/New_Voxels"
     directory = os.fsencode(path)
@@ -183,7 +207,6 @@ def directories() -> None:
         upload_file(file_path, file_name)
         
 
-
-
+retrieve_files()
 
 

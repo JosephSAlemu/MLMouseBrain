@@ -6,6 +6,7 @@ import requests
 import paramiko
 from validation import is_valid_voxel
 from constants import headers, DISTRIBUTED
+from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
 def filter_p4_data() -> None:
@@ -393,6 +394,29 @@ def current_files() -> None:
         present = []
         count+=1
 
-        
+def standard_deviation() -> None:
+    """
+    extremely specific method just to find the standard deviation of a method to find which coordinate is 140 microns
 
-#current_files()
+    Hint: it's the z axis
+    """
+    path = "Datasets/Outputs/New_Voxels/Pdgfrb.csv"
+
+    file = pd.read_csv(path)
+    x_vals = []
+    y_vals = []
+    z_vals = []
+
+    for _,row in file.iterrows():
+        x = row["X"]
+        y = row["Y"]
+        z = row["Z"]
+        if x != "error":
+            x_vals.append(float(x))
+            y_vals.append(float(y))
+            z_vals.append(float(z))
+    
+    print(f"x std: {stdev(x_vals)}")
+    print(f"y std: {stdev(y_vals)}")
+    print(f"z std: {stdev(z_vals)}")
+

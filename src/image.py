@@ -7,7 +7,9 @@ import matplotlib.pyplot as plt
 import requests
 import time
 import ast
+import os
 from matplotlib.patches import Rectangle
+from math import modf
 from filter import (get_all_chunks, group_data, get_section_dataset_ids)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY
@@ -386,6 +388,144 @@ def calculate_density(gene: str) -> None:
     upload_file(path, f"{gene}.csv")
 
 
+def bin_voxels() -> None:
+    """
+    Takes in a gene name as a string.
+
+    Opens the file and retrieves the voxels.
+
+    Bin all the voxels in all the files in the genes they belong to.
+
+    Bins are a 9x9 grid based on the x and y value.
+
+                         ___________
+              n.0-n.33  |___|___|___|
+    (X Coord) n.34-n.66 |___|___|___|
+              n.67-n.99 |___|___|___|
+                        n.0  n.34 n.67 
+                        -    -    -
+                        n.33 n.66 n.69
+                          (Y Coord)
+
+    ALSO binned on the rounded z coordinate binned
+        
+    """
+
+    headers = [
+        "X",
+        "Y",
+        "Z",
+        "Density_2500"
+    ]
+    file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+    for gene in file["Gene"]:
+        gene_file = pd.read_csv(f"Datasets/Outputs/New_Voxels/{gene}.csv")
+        with open(f"Datasets/Outputs/Binned_Voxels/{gene}.csv", "w", newline="") as new_file:
+            writer = csv.writer(new_file)
+            writer.writerow(headers)
+            values = {}
+
+            for _,row in gene_file.iterrows():
+                x = row["X"]
+                y = row["Y"]
+                z = row["Z"]
+                density = row["Density_2500"]
+                image = row["Image"]
+                if x != "error":
+                    x = float(x)
+                    y = float(y)
+                    z = float(z)
+                    density = float(density)
+                    x_rem,x_num = modf(x)
+                    y_rem,y_num = modf(y)
+                    new_z = round(z)
+                    coords = None
+                    if x_rem < .34:
+                        new_x = x_num
+                        if y_rem < .34:
+                            new_y = y_num
+
+                        elif y_rem >= .34 and y_rem <.67:
+                            new_y = y_num + .34
+
+                        elif y_rem >= .67:
+                            new_y = y_num + .67
+                            
+                        coords = (new_x, new_y, new_z)
+                        if coords not in values:
+                            values[coords] = []
+                        og_coords = (x,y,z,density)
+                        values[coords].append(og_coords)
+
+                    elif x_rem >= .34 and x < .67:
+                        new_x = x_num+.34
+                        if y_rem < .34:
+                            new_y = y_num
+                    
+                        elif y_rem >= .34 and y_rem <.67:
+                            new_y = y_num + .34
+                        
+                        elif y_rem >= .67:
+                            new_y = y_num + .67
+                            
+                        coords = (new_x, new_y, new_z)
+                        if coords not in values:
+                            values[coords] = []
+                        og_coords = (x,y,z,density)
+                        values[coords].append(og_coords)
+
+                    elif x_rem >= .67:
+                        new_x = x_num+.67
+                        if y_rem < .34:
+                            new_y = y_num
+                        
+                        elif y_rem >= .34 and y_rem <.67:
+                            new_y = y_num + .34
+                        
+                        elif y_rem >= .67:
+                            new_y = y_num + .67
+
+                        coords = (new_x, new_y, new_z)
+                        if coords not in values:
+                            values[coords] = []
+                        og_coords = (x,y,z,density)
+                        values[coords].append(og_coords)
+            values = average_voxels(values)
+            print(values)
+            for key,value in values.items():
+                writer.writerow([key[0], key[1], key[2], value])
+
+
+
+
+
+def average_voxels(binned_voxels:dict) -> dict:
+    """
+    Iterate over the values for each key in binned_voxel
+
+    density = length of tuple -1
+
+    (53.67, 30.67, 20): [(53.963118106190564, 30.997476532337647, 20.406354464995584, 0.0), (53.93815451183082, 30.683001395965636, 20.409561177057633, 0.1852)]
+    
+    """
+
+    return_dict = {}
+    for key, value in binned_voxels.items():
+        print(key)
+        density = 0
+        for voxel in value:
+            density+= voxel[len(voxel)-1]
+
+            print(density)
+        density = density/len(value)
+        return_dict[key] = density
+    return return_dict
+    
+    
+
+
+
+    
 def execute() -> None:
     """
     Deprecated method
@@ -396,3 +536,4 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
 
+bin_voxels()

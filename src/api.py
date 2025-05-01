@@ -207,6 +207,5 @@ def directories() -> None:
         upload_file(file_path, file_name)
         
 
-retrieve_files()
 
 

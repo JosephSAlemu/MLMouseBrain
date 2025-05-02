@@ -496,9 +496,6 @@ def bin_voxels() -> None:
                 writer.writerow([key[0], key[1], key[2], value])
 
 
-
-
-
 def average_voxels(binned_voxels:dict) -> dict:
     """
     Iterate over the values for each key in binned_voxel
@@ -521,11 +518,6 @@ def average_voxels(binned_voxels:dict) -> dict:
         return_dict[key] = density
     return return_dict
     
-    
-
-
-
-    
 def execute() -> None:
     """
     Deprecated method
@@ -536,4 +528,3 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
 
-bin_voxels()

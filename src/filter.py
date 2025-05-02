@@ -4,6 +4,7 @@ import json
 import csv
 import requests
 import paramiko
+import ast
 from validation import is_valid_voxel
 from constants import headers, DISTRIBUTED
 from statistics import stdev
@@ -229,32 +230,10 @@ def noise_threshold() -> None:
     Remove a Column (Gene) if it's values for all rows is below 0.001.
 
     '''
-    p56_file = pd.read_csv(r"./Datasets/Outputs/NewDenS_COMB_Genes.csv")
+    p4_df = pd.read_csv()
 
     threshold = 0.001
-    above_threshold = False
-    cols = p56_file.shape[1]
-    rows = p56_file.shape[0]
     
-    saved_rows = []
-    saved_rows.extend(p56_file.columns[1:6])
-
-    #start from 6 to end of row length
-    count = 0
-    for col in range(6, cols):
-        gene = p56_file.filter(items = [p56_file.columns[col]])
-        print(count)
-        for row in range(rows):
-            if gene.iloc[row,0] > threshold:
-                above_threshold = True
-        if above_threshold == True:
-            saved_rows.append(p56_file.columns[col])
-            above_threshold = False
-        count+=1
-    
-    result = p56_file.filter(items = saved_rows)
-    print(len(saved_rows))
-    result.to_csv(r"./Datasets/Outputs/Noise_NewDenS_COMB_Genes.csv", index=True)
 
 def get_all_chunks() -> list:
     '''
@@ -394,6 +373,87 @@ def current_files() -> None:
         present = []
         count+=1
 
+def get_voxel_dataframe() -> None:
+    """
+    Creates a text file with the mapping between coordinates and their gene expression across all files
+
+    This way we can easily create a csv file by reading a single, organized text file instead of looking for a specific coordinate across all files
+    """
+    voxels = {}
+    file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+    for gene in file["Gene"]:
+        gene_file = pd.read_csv(f"Datasets/Outputs/Binned_Voxels/{gene}.csv")
+        for _,row in gene_file.iterrows():
+            x = float(row["X"])
+            y = float(row["Y"])
+            z = int(row["Z"])
+            density = float(row["Density_2500"])
+            coords = (x,y,z)
+            if coords not in voxels:
+                voxels[coords] = []
+            gene_expression = (gene, density)
+            voxels[coords].append(gene_expression)
+
+    with open("Datasets/Outputs/voxels.txt", "w") as res_file:
+        for key, value in voxels.items():
+            res_file.write(f"{key}: {value}\n\n\n")
+    
+
+def create_voxel_dataframe() -> None:
+    header = [
+        "X",
+        "Y",
+        "Z"
+    ]
+    file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+    for gene in file["Gene"]:
+        header.append(str(gene))
+    vox_info = [0.0] * len(header)
+
+    with open("Datasets/Outputs/P4_50_NewDenS.csv", "w") as res_file, open("Datasets/Outputs/voxels.txt", "r") as vox_file:
+        writer = csv.writer(res_file)
+        writer.writerow(header)
+        arr = [j for j in vox_file]
+        for voxel in arr:
+            coords, expression = voxel.split(": ")
+            coords = ast.literal_eval(coords)
+            expression = ast.literal_eval(expression)
+            vox_info[0] = coords[0]
+            vox_info[1] = coords[1]
+            vox_info[2] = coords[2]
+
+            for gene_exp in expression:
+                gene, exp = gene_exp
+                if (exp != 0.0):
+                    index = header.index(gene)                    
+                    vox_info[index] = exp
+            
+            writer.writerow(vox_info)
+            vox_info = [0.0] * len(header)
+
+    print(vox_info)
+    print(header)
+
+
+    
+
+    """
+    print(header)
+
+    print(len(header))
+    print(len(density))
+    print(density)
+    print(header.index("Plp1"))
+
+    
+    """
+
+
+    
+
+            
+
+
 def standard_deviation() -> None:
     """
     extremely specific method just to find the standard deviation of a method to find which coordinate is 140 microns
@@ -420,3 +480,4 @@ def standard_deviation() -> None:
     print(f"y std: {stdev(y_vals)}")
     print(f"z std: {stdev(z_vals)}")
 
+create_voxel_dataframe()

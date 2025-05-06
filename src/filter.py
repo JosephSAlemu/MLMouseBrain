@@ -211,7 +211,7 @@ def filter_common_genes() -> None:
     common_genes = []
     for p56_column in p56_file.columns:
         temp = p56_column.rsplit("-",1)
-        for p4_column in p4_file.columns:
+        for p4_column in p4_file.columnus:
             temp2 = p4_column.rsplit("-", 1)
             if temp[0] == temp2[0]:
                 common_genes.append(p56_column)
@@ -301,9 +301,6 @@ def get_missing_ids() -> str:
             missing.append(i)
     
     print(missing)
-
-
-
 
 def get_average() -> None:
     '''

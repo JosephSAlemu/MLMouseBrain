@@ -4,6 +4,9 @@ headers = [
 "X","Y","Z"
 ]
 
+CHUNK_HEADERS = [
+            "Voxel", "Section_Image"
+]
 DENSITY = 2500
 
 DISTRIBUTED = 259

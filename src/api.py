@@ -8,8 +8,9 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
 from filter import group_data, split_section_ids
-from constants import (SIZE, headers, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID)
-from validation import is_valid_voxel, is_valid_chunk, is_valid_file
+from constants import (SIZE, headers, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS)
+from validation import is_valid_voxel, is_valid_chunk
+
 
 
 #for retrying requests
@@ -51,20 +52,19 @@ def download_section_images() -> None:
     print(f"{len(test)} Section Images to Download.")
 
 
-def reference_to_image(X: int, Y: int, Z: int, count: int) -> None:
-    """
-    Refactor to handle all mice
-    """
+"""def reference_to_image(X: int, Y: int, Z: int, count: int) -> None:
+
+    
     list = []
     
-    chunk_headers = [
+    CHUNK_HEADERS = [
         "Voxel", "Section_Image"
     ]
     if is_valid_chunk("Chunked", count):
         created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{count}.csv"
         with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
             writer = csv.writer(new_file)
-            writer.writerow(chunk_headers)
+            writer.writerow(CHUNK_HEADERS)
             
             for line in file:
                 if len(list) == 100:
@@ -86,73 +86,73 @@ def reference_to_image(X: int, Y: int, Z: int, count: int) -> None:
                 writer.writerow([count, data])
                 list = []
             else:
-                print(f"ISSUE WITH QUERY {url}")
+                print(f"ISSUE WITH QUERY {url}")"""
 
-def test(X: int, Y: int, Z: int, mouse_reference_id: int, section_ids: list, new_file: str) -> None:
+def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, counter: int) -> None:
     """
-    Takes in X,Y,Z reference space coordinates, mouse_reference_id constant, a list of section_id's, and a new_file path
+    Takes in X,Y,Z reference space coordinates (NOT MICRONS), mouse_reference_id constant, a list of section_id's, and a counter to create the new file path.
 
     Refactor the following:
         - is_valid_chunk to a more general name. Additionally, allow it to take any path passed by the function.
-        - Allow user to input path of a file (or array) all section_ids
+        - Allow user to input path of a file (or array) for section_image_ids
         - Remove redundant code.
-        - 
+        - Remove counter and refactor so we just get the next valid P4_Chunk file
         
     """
+    #2D array
     section_id_chunks = split_section_ids(section_ids)
     if mouse == P56_MOUSE_REFERENCE_ID:
-        section_list = []
-        chunk_headers = [
-            "Voxel", "Section_Image"
-        ]
-        if is_valid_chunk("Chunked", count):
-            created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{count}.csv"
+
+        #Have a line where you convert this to microns
+        X,Y,Z = float(X), float(Y), float(Z)
+        X, Y, Z = X*200, Y*200, Z*200
+        image_ids = []
+        if is_valid_chunk("Chunked", counter):
+            created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{counter}.csv"
             with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
                 writer = csv.writer(new_file)
-                writer.writerow(chunk_headers)
+                writer.writerow(CHUNK_HEADERS)
                 
                 for line in file:
-                    if len(section_list) == 100:
-                        url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, section_list))}"
+                    if len(image_ids) == 100:
+                        url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
                         response = requests.get(url)
                         if response.status_code == 200:
                             data = f"{response.json()['msg']}"
-                            writer.writerow([count, data])
-                            section_list = []
-                            section_list.append(line)
+                            writer.writerow([counter, data])
+                            image_ids = []
+                            image_ids.append(line)
                         else:
                             print(f"ISSUE WITH QUERY {url}")
                     else:
-                        section_list.append(int(line))
-                url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, section_list))}"
+                        image_ids.append(int(line))
+                url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
                 response = requests.get(url)
                 if response.status_code == 200:
                     data = f"{response.json()['msg']}"
-                    writer.writerow([count, data])
-                    section_list = []
+                    writer.writerow([counter, data])
+                    image_ids = []
                 else:
                     print(f"ISSUE WITH QUERY {url}")
     
     elif mouse == P4_MOUSE_REFERENCE_ID:
-        if is_valid_file(new_file):
-            with open(new_file, mode ="a", newline="") as created_file:
+        # Reference to Micron conversion
+        X,Y,Z = float(X), float(Y), float(Z)
+        n_X, n_Y, n_Z = X*200, Y*200, Z*200
+
+        if is_valid_chunk("Fill_Negatives", counter):
+            created_file = rf"./Datasets/Outputs/Fill_Negatives/P4_Chunk_{counter}.csv"
+            with open(created_file, mode ="a", newline="") as new_file:
                 writer = csv.writer(new_file)
-                writer.writerow(chunk_headers)
-                for id in section_id_chunks:
-                    url = f"http://api.brain-map.org/api/v2/reference_to_image/{mouse}.json?x={X}&y={Y}&z={Z}&section_data_set_ids={id}"
+                writer.writerow(CHUNK_HEADERS)
+                for image_ids in section_id_chunks:
+                    url = f"http://api.brain-map.org/api/v2/reference_to_image/{mouse}.json?x={n_X}&y={n_Y}&z={n_Z}&section_data_set_ids={','.join(map(str, image_ids))}"
                     response = requests.get(url)
                     if response.status_code == 200:
                         data = f"{response.json()['msg']}"
-                        writer.writerow([count, data])
-                        section_list = []
-                        section_list.append(line)
+                        writer.writerow([(X,Y,Z), data])
                     else:
                         print(f"ISSUE WITH QUERY {url}")
-
-                    
-
-
-
 
 
 def fifty_chunk(X: int, Y: int, Z: int, count: int) -> None:
@@ -186,7 +186,7 @@ def fifty_chunk(X: int, Y: int, Z: int, count: int) -> None:
     print(f"done {counter}")
 
 
-def multiply_coordinate_for_microns() -> None:
+def P56_Micron_Multiply() -> None:
     """
     takes all the p-56 voxel coordinates and converts them to microns by multiplying them by 200
 
@@ -202,6 +202,7 @@ def multiply_coordinate_for_microns() -> None:
     file['Z'] = file['Z'] * 200
     
     file.to_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Outputs\NewDenC_Microns.csv', index = False)
+
 
 
 

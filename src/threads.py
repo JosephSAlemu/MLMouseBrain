@@ -1,5 +1,5 @@
 from threading import Thread
-from image import calculate_density
+from image import (calculate_density, fill_negative_expressions)
 #from api import chunk
 import pandas as pd
 
@@ -22,17 +22,16 @@ class Threads:
     def retrieve_images(self) -> None:
         """
         find a way to thread the section images
-        
         """
+        fill_negative_expressions()
 
-def use_threads(file_number: int) -> None:
+
+def use_threads(length: int, thread_count: int, file: str|None) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
     '''
     file = rf"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv"
-    length = 259
     count = 0
-    thread_count = 7
     thread_genes = length//thread_count
     
     thread_instances = []
@@ -49,10 +48,10 @@ def use_threads(file_number: int) -> None:
     
     for thread in threads:
         thread.join()
-
-        
+  
 
 if __name__ == "__main__":
-    #use_threads(8)
-    ...
+    #file_numer = 8
+    #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
+    use_threads()
     

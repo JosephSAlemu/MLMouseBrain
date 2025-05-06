@@ -230,9 +230,12 @@ def noise_threshold() -> None:
     Remove a Column (Gene) if it's values for all rows is below 0.001.
 
     '''
-    p4_df = pd.read_csv()
+    p4_df = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv")
+    print(p4_df.columns)
 
     threshold = 0.001
+
+
     
 
 def get_all_chunks() -> list:
@@ -373,6 +376,7 @@ def current_files() -> None:
         present = []
         count+=1
 
+
 def get_voxel_dataframe() -> None:
     """
     Creates a text file with the mapping between coordinates and their gene expression across all files
@@ -408,7 +412,7 @@ def create_voxel_dataframe() -> None:
     file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
     for gene in file["Gene"]:
         header.append(str(gene))
-    vox_info = [0.0] * len(header)
+    vox_info = [-1] * len(header)
 
     with open("Datasets/Outputs/P4_50_NewDenS.csv", "w") as res_file, open("Datasets/Outputs/voxels.txt", "r") as vox_file:
         writer = csv.writer(res_file)
@@ -429,29 +433,10 @@ def create_voxel_dataframe() -> None:
                     vox_info[index] = exp
             
             writer.writerow(vox_info)
-            vox_info = [0.0] * len(header)
+            vox_info = [-1] * len(header)
 
     print(vox_info)
     print(header)
-
-
-    
-
-    """
-    print(header)
-
-    print(len(header))
-    print(len(density))
-    print(density)
-    print(header.index("Plp1"))
-
-    
-    """
-
-
-    
-
-            
 
 
 def standard_deviation() -> None:
@@ -480,4 +465,56 @@ def standard_deviation() -> None:
     print(f"y std: {stdev(y_vals)}")
     print(f"z std: {stdev(z_vals)}")
 
-create_voxel_dataframe()
+def count_missing_expressions() -> None:
+    """
+    Count the number of missing gene expressions in the 50 micrometer P4 dataframe
+    """
+    path = "Datasets/Outputs/P4_50_NewDenS.csv"
+
+    file = pd.read_csv(path)
+    start = 1
+    end = 8
+
+    while start <= end:
+        columns = [
+            "X",
+            "Y",
+            "Z"
+        ]
+        count = 0
+        laptop = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{start}.csv")
+        for _,row in laptop.iterrows():
+            gene = row["Gene"]
+            dataset = row["Section_Dataset_Id"]
+
+            print(f"{gene} and {dataset}")
+            
+        
+        print(len(columns))
+        print(file[columns])
+        
+        start+=1
+
+def split_section_ids(section_ids: list) -> list[list]:
+    """
+    Split array of section id's into a 2d array of sections of 100
+    """
+    length = len(section_ids)
+    if length < 101:
+        return [section_ids]
+    
+    result = []
+    arr = []
+    length = len(section_ids)
+    for ind in range(length):
+        if ind != 0 and ind%100 == 0:
+            result.append(arr)
+            arr = []
+        if ind == length-1:
+            arr.append(section_ids[ind])
+            result.append(arr)
+            arr = []
+        arr.append(section_ids[ind])
+    
+    return result
+

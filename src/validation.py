@@ -8,6 +8,10 @@ def is_valid_image(section_image: int) -> bool:
         return False
     return True
 
+def is_valid_file(path: str) -> bool:
+    if os.path.exists(path):
+        return False
+    return True
 
 def is_valid_chunk(path: str, count:int) -> bool:
     path = rf"./Datasets/Outputs/{path}/P4_Chunk_{count}.csv"

@@ -7,9 +7,9 @@ import paramiko
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
-from filter import group_data
-from constants import SIZE, headers
-from validation import is_valid_voxel, is_valid_chunk
+from filter import group_data, split_section_ids
+from constants import (SIZE, headers, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID)
+from validation import is_valid_voxel, is_valid_chunk, is_valid_file
 
 
 #for retrying requests
@@ -52,7 +52,11 @@ def download_section_images() -> None:
 
 
 def reference_to_image(X: int, Y: int, Z: int, count: int) -> None:
+    """
+    Refactor to handle all mice
+    """
     list = []
+    
     chunk_headers = [
         "Voxel", "Section_Image"
     ]
@@ -83,6 +87,73 @@ def reference_to_image(X: int, Y: int, Z: int, count: int) -> None:
                 list = []
             else:
                 print(f"ISSUE WITH QUERY {url}")
+
+def test(X: int, Y: int, Z: int, mouse_reference_id: int, section_ids: list, new_file: str) -> None:
+    """
+    Takes in X,Y,Z reference space coordinates, mouse_reference_id constant, a list of section_id's, and a new_file path
+
+    Refactor the following:
+        - is_valid_chunk to a more general name. Additionally, allow it to take any path passed by the function.
+        - Allow user to input path of a file (or array) all section_ids
+        - Remove redundant code.
+        - 
+        
+    """
+    section_id_chunks = split_section_ids(section_ids)
+    if mouse == P56_MOUSE_REFERENCE_ID:
+        section_list = []
+        chunk_headers = [
+            "Voxel", "Section_Image"
+        ]
+        if is_valid_chunk("Chunked", count):
+            created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{count}.csv"
+            with open(r'./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt') as file, open(created_file, mode ="a", newline="") as new_file:
+                writer = csv.writer(new_file)
+                writer.writerow(chunk_headers)
+                
+                for line in file:
+                    if len(section_list) == 100:
+                        url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, section_list))}"
+                        response = requests.get(url)
+                        if response.status_code == 200:
+                            data = f"{response.json()['msg']}"
+                            writer.writerow([count, data])
+                            section_list = []
+                            section_list.append(line)
+                        else:
+                            print(f"ISSUE WITH QUERY {url}")
+                    else:
+                        section_list.append(int(line))
+                url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, section_list))}"
+                response = requests.get(url)
+                if response.status_code == 200:
+                    data = f"{response.json()['msg']}"
+                    writer.writerow([count, data])
+                    section_list = []
+                else:
+                    print(f"ISSUE WITH QUERY {url}")
+    
+    elif mouse == P4_MOUSE_REFERENCE_ID:
+        if is_valid_file(new_file):
+            with open(new_file, mode ="a", newline="") as created_file:
+                writer = csv.writer(new_file)
+                writer.writerow(chunk_headers)
+                for id in section_id_chunks:
+                    url = f"http://api.brain-map.org/api/v2/reference_to_image/{mouse}.json?x={X}&y={Y}&z={Z}&section_data_set_ids={id}"
+                    response = requests.get(url)
+                    if response.status_code == 200:
+                        data = f"{response.json()['msg']}"
+                        writer.writerow([count, data])
+                        section_list = []
+                        section_list.append(line)
+                    else:
+                        print(f"ISSUE WITH QUERY {url}")
+
+                    
+
+
+
+
 
 def fifty_chunk(X: int, Y: int, Z: int, count: int) -> None:
     counter = 0
@@ -120,6 +191,9 @@ def multiply_coordinate_for_microns() -> None:
     takes all the p-56 voxel coordinates and converts them to microns by multiplying them by 200
 
     Then, it runs it through the API
+
+    Modify to do the following:
+    Take mouse number. Choose mouse multiplication constant based on mouse number.
 
     """
     file = pd.read_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Inputs\NewDenC.csv')

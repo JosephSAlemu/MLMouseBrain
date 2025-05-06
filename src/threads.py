@@ -18,6 +18,12 @@ class Threads:
         for index in range(self.start, self.stop+1):
             gene = file.iloc[index]["Gene"]
             calculate_density(gene)
+    
+    def retrieve_images(self) -> None:
+        """
+        find a way to thread the section images
+        
+        """
 
 def use_threads(file_number: int) -> None:
     '''

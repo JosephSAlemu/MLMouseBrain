@@ -518,7 +518,6 @@ def average_voxels(binned_voxels:dict) -> dict:
         return_dict[key] = density
     return return_dict
     
-
 def fill_negative_expressions(file_num: int, start: int, stop: int) -> None:
     """
     takes in a file_num for the P4 Section Laptop file
@@ -528,61 +527,24 @@ def fill_negative_expressions(file_num: int, start: int, stop: int) -> None:
     # open the voxel master file and the p4_Section_laptop file
     # for each voxel, iterate over the genes in each p4_Section_laptop file
     # if the value is -1, put that section_id from the p4_Section_laptop file into the array
-    counter = 0
     p4_laptop = pd.read_csv(f"Datasets/Outputs/P4_Section_Laptop{file_num}.csv")
 
     voxel = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv")
 
     section_ids = []
 
-    for _, gene in p4_laptop.iterrows():
-        if voxel.loc[voxel.index[0], gene["Gene"]] == -1:
-            section_ids.append(gene["Section_Dataset_Id"])
-        # Run through API here
-    print(section_ids)
-    for _, voxel in master_file.iterrows():
+    while start <= stop:
+        index = voxel.index[start]
         for _, gene in p4_laptop.iterrows():
-            if voxel.loc[voxel.index[0], gene["Gene"]] == -1:
+            if voxel.loc[index, gene["Gene"]] == -1:
                 section_ids.append(gene["Section_Dataset_Id"])
         # Run through API here
-        X = voxel["X"]
-        Y = voxel["Y"]
-        Z = voxel["Z"]
-        reference_to_image(X, Y, Z, P4_MOUSE_REFERENCE_ID, section_ids, counter)
+        X = voxel.loc[index, "X"]
+        Y = voxel.loc[index, "Y"]
+        Z = voxel.loc[index, "Z"]
+        reference_to_image(X, Y, Z, P4_MOUSE_REFERENCE_ID, section_ids, start)
         section_ids = []
-        counter+=1
-
-
-
-    
-        
-    
-# use this as ref for function above
-"""def get_section_images() -> list:
-    '''
-    Retrieves all section images???
-    '''
-    section_images = {}
-
-    temp = r"./Datasets/Outputs/Test/P4_Chunk_0.csv"
-    counter = 1
-    while os.path.exists(temp):
-        print(temp)
-        file = pd.read_csv(rf"{temp}")
-        for row in file['Section_Image']:
-            new_row = json.loads(row.replace("\'","\""))
-            for chunk in new_row:
-                image = chunk['image_sync']['section_image_id']
-                if image not in section_images:
-                    section_images[image] = 1
-                else:
-                    section_images[image] = section_images[image]+1
-        #print(temp)
-        temp = rf"./Datasets/Outputs/Test/P4_Chunk_{counter}.csv"
-        counter+=1
-    print(section_images)
-    return section_images
-"""
+        start+=1
 
 
 def execute() -> None:
@@ -594,5 +556,3 @@ def execute() -> None:
     for gene in file["Gene"]:
         if is_valid_p4_voxel_gene(gene):
             calculate_density(gene)
-
-fill_negative_expressions(8, 0, 1)

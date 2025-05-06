@@ -5,7 +5,7 @@ import pandas as pd
 
 
 class Threads:
-    def __init__(self, start, stop, file):
+    def __init__(self, start: int, stop: int, file: str|int|None):
         self.start = start
         self.stop = stop
         self.file = file
@@ -23,14 +23,14 @@ class Threads:
         """
         find a way to thread the section images
         """
-        fill_negative_expressions()
+        fill_negative_expressions(self.file, self.start, self.stop)
+        
 
 
-def use_threads(length: int, thread_count: int, file: str|None) -> None:
+def use_threads(length: int, thread_count: int, file: str|int|None) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
     '''
-    file = rf"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv"
     count = 0
     thread_genes = length//thread_count
     
@@ -38,11 +38,12 @@ def use_threads(length: int, thread_count: int, file: str|None) -> None:
     threads = []
     while count < length:
         #append threads in a list
+        print(f"{count} - {count+thread_genes-1}")
         thread_instances.append(Threads(count, count+thread_genes-1, file))
         count+=thread_genes
 
     for instance in thread_instances:
-        thread = Thread(target = instance.retrieve_voxels)
+        thread = Thread(target = instance.retrieve_images)
         threads.append(thread)
         thread.start()
     
@@ -51,7 +52,7 @@ def use_threads(length: int, thread_count: int, file: str|None) -> None:
   
 
 if __name__ == "__main__":
-    #file_numer = 8
+    #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
-    use_threads()
+    use_threads(7535, 11, 8)
     

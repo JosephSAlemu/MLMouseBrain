@@ -20,6 +20,7 @@ def filter_p4_data() -> None:
     with open(r'./result.txt', mode ="w") as ff:
         ff.write(str(answer.shape[0]))
 
+
 def get_dataset_id() -> None:
     '''
     deprecated
@@ -38,6 +39,7 @@ def get_dataset_id() -> None:
     with open(r"./result.txt", mode="w") as ff:
         ff.write('\n'.join(str(i) for i in res))
 
+
 def retrieve_gene_from_section_id(section_dataset_id: int) -> str:
     '''
     takes in a section dataset id and returns the corresponding gene acronym for that id
@@ -51,6 +53,7 @@ def retrieve_gene_from_section_id(section_dataset_id: int) -> str:
         return data        
     else:
         print(f"ISSUE WITH QUERY {url}")
+
 
 def group_data(voxel: int) -> list[dict]:
     '''
@@ -172,30 +175,32 @@ def get_unique_genes(common_genes: list[str]) -> list[str]:
 
 
 
-def get_section_images() -> list:
+def read_chunk_files(path: str) -> tuple:
     '''
-    Retrieves all section images???
-    '''
-    section_images = {}
+    Takes in a chunk file path
 
-    temp = r"./Datasets/Outputs/Test/P4_Chunk_0.csv"
-    counter = 1
-    while os.path.exists(temp):
-        print(temp)
-        file = pd.read_csv(rf"{temp}")
-        for row in file['Section_Image']:
-            new_row = json.loads(row.replace("\'","\""))
-            for chunk in new_row:
-                image = chunk['image_sync']['section_image_id']
-                if image not in section_images:
-                    section_images[image] = 1
-                else:
-                    section_images[image] = section_images[image]+1
-        #print(temp)
-        temp = rf"./Datasets/Outputs/Test/P4_Chunk_{counter}.csv"
-        counter+=1
-    print(section_images)
-    return section_images
+    Returns a dictionary.
+    key = voxels coordinates in a tuple
+    value = list of tuples which has: (section image,x,y))
+    '''
+    result = {}
+
+    file = pd.read_csv(path)
+    key = ast.literal_eval(file["Voxel"][0])
+    result[key] = []
+
+    #first flatten out the list
+    for row in file['Section_Image']:
+        new_row = json.loads(row.replace("\'","\""))
+        for chunk in new_row:
+            voxel = chunk['image_sync']
+            image = voxel['section_image_id']
+            X = int(voxel["x"])
+            Y = int(voxel["y"])
+
+            result[key].append((image,X,Y))
+
+    return result
 
 
 
@@ -235,9 +240,6 @@ def noise_threshold() -> None:
 
     threshold = 0.001
 
-
-    
-
 def get_all_chunks() -> list:
     '''
     get every single chunk
@@ -251,9 +253,6 @@ def get_all_chunks() -> list:
         temp = rf"./Datasets/Outputs/Chunked/P4_Chunk_{counter}.csv"
         counter+=1
     return chunks
-
-
-    #print(json.loads(chunk['Section_Image'][0].replace("\'","\""))[0]['image_sync']['section_image_id'])
 
 
 def get_path() -> str:
@@ -321,6 +320,10 @@ def get_average() -> None:
 
 
 def partition_genes() -> None:
+    """
+    split genes into 8 files to represent 8 laptops.
+
+    """
     file = pd.read_csv(r"./Datasets/Outputs/P4_Section_Data.csv")
     columns = file.columns.tolist()
     laptop = 1

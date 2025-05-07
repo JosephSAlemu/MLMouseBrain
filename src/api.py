@@ -88,6 +88,7 @@ def download_section_images() -> None:
             else:
                 print(f"ISSUE WITH QUERY {url}")"""
 
+
 def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, counter: int) -> None:
     """
     Takes in X,Y,Z reference space coordinates (NOT MICRONS), mouse_reference_id constant, a list of section_id's, and a counter to create the new file path.

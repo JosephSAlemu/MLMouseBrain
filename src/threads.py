@@ -1,5 +1,5 @@
 from threading import Thread
-from image import (calculate_density, fill_negative_expressions)
+from image import (calculate_density_and_voxels, fill_negative_density)
 #from api import chunk
 import pandas as pd
 
@@ -17,13 +17,13 @@ class Threads:
         
         for index in range(self.start, self.stop+1):
             gene = file.iloc[index]["Gene"]
-            calculate_density(gene)
+            calculate_density_and_voxels(gene)
     
     def retrieve_images(self) -> None:
         """
         find a way to thread the section images
         """
-        fill_negative_expressions(self.file, self.start, self.stop)
+        fill_negative_density(self.file, self.start, self.stop)
         
 
 
@@ -54,5 +54,6 @@ def use_threads(length: int, thread_count: int, file: str|int|None) -> None:
 if __name__ == "__main__":
     #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
-    use_threads(7535, 11, 8)
+    
+    #use_threads(7535, 11, 8)
     

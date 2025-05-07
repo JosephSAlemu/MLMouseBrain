@@ -10,7 +10,7 @@ import ast
 import os
 from matplotlib.patches import Rectangle
 from math import modf
-from filter import (get_all_chunks, group_data, get_section_dataset_ids)
+from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID
 from api import (image_to_reference, upload_file, directories, reference_to_image)
@@ -320,13 +320,16 @@ def binary_dilation(boxes: list[(tuple,tuple)], section: int, index: int, ) -> l
     return dilated_boxes
 
 
-def calculate_density(gene: str) -> None:
+def calculate_density_and_voxels(gene: str) -> None:
     '''
-    This function takes in a gene (section_dataset_id) and does the following:
-    1. retrieve the section image id's attached to that section_dataset_id
+    Purpose: It takes P4 section images + seed pixels -> P4 Voxel + P4
+
+    This function takes in a gene and does the following:
+    1. retrieve the section images id's associated with that gene
     2. downloads the binarized section images using their id's
-    3. retrieve all valid boxes from a function (currently called plot function)
-    4. use those box coordinates as bounds and measure density in each valid box.
+    3. retrieve all valid boxes/bins from a function (binary dilation)
+    4. convert each bin to a voxel while also measuring the density in that bin.
+    5. assign voxel to density measured in a bin on a genes section image
     '''
 
     headers = [
@@ -372,8 +375,8 @@ def calculate_density(gene: str) -> None:
 
                 expressed = 0
                
-                for x in range(x_points[0], x_points[1], 1):
-                    for y in range(y_points[0], y_points[1], 1):
+                for x in range(x_points[0], x_points[1]):
+                    for y in range(y_points[0], y_points[1]):
                         b, g, r = image[y,x]
 
                         if b > 0 or g > 0 or r > 0:
@@ -387,6 +390,7 @@ def calculate_density(gene: str) -> None:
 
     upload_file(path, f"{gene}.csv")
 
+ 
 
 def bin_voxels() -> None:
     """
@@ -518,7 +522,7 @@ def average_voxels(binned_voxels:dict) -> dict:
         return_dict[key] = density
     return return_dict
     
-def fill_negative_expressions(file_num: int, start: int, stop: int) -> None:
+def fill_negative_density(file_num: int, start: int, stop: int) -> None:
     """
     takes in a file_num for the P4 Section Laptop file
 
@@ -546,6 +550,49 @@ def fill_negative_expressions(file_num: int, start: int, stop: int) -> None:
         section_ids = []
         start+=1
 
+def measure_density(start: int, stop:int) -> list:
+    result = {}
+    while start <= stop:
+        path = f"Datasets/Outputs/Fill_Negatives/P4_Chunk_{start}.csv"
+
+        result = result | read_chunk_files(path)
+        
+        start+=1
+    
+    # Now download the image and then
+    for key, value in result.items():
+        print(f"\n\n{key}\n\n")
+        for section in value:
+            section_image_id = section[0]
+            X = section[1]
+            Y = section[2]
+            
+            binarized_image(section_image_id)
+            
+            image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
+
+            height, width, channels = image.shape
+            x_min, x_max = X-25, X+25
+            y_min, y_max = Y-25, Y+25
+
+            print((x_min, x_max))
+            
+
+            if x_max-1 > width or y_max-1 > height:
+                    #if the points are out of bounds of the image itself, skip this bin.
+                print(f"error on {key}: {section}")
+            else:
+                for x in range(x_min, x_max):
+                    for y in range(y_points[0], y_points[1]):
+                        b, g, r = image[y,x]
+
+                        if b > 0 or g > 0 or r > 0:
+                            expressed+=1
+                gene_expression = expressed/DENSITY
+                    
+
+            #expressed = 0
+
 
 def execute() -> None:
     """
@@ -555,4 +602,6 @@ def execute() -> None:
     file = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{number}.csv")
     for gene in file["Gene"]:
         if is_valid_p4_voxel_gene(gene):
-            calculate_density(gene)
+            calculate_density_and_voxels(gene)
+
+measure_density(0,1)

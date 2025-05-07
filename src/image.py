@@ -20,11 +20,11 @@ import matplotlib.image as mpimg
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
-"""client = paramiko.SSHClient()
+client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"), compress=True)
 
-sftp = client.open_sftp()"""
+sftp = client.open_sftp()
 def plot() -> None:
 
     '''

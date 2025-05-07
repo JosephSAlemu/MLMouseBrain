@@ -89,7 +89,7 @@ def download_section_images() -> None:
                 print(f"ISSUE WITH QUERY {url}")"""
 
 
-def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, counter: int) -> None:
+def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, counter: int, file_num: int) -> None:
     """
     Takes in X,Y,Z reference space coordinates (NOT MICRONS), mouse_reference_id constant, a list of section_id's, and a counter to create the new file path.
 
@@ -142,7 +142,7 @@ def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, co
         n_X, n_Y, n_Z = X*200, Y*200, Z*200
 
         if is_valid_chunk("Fill_Negatives", counter):
-            created_file = rf"./Datasets/Outputs/Fill_Negatives/P4_Chunk_{counter}.csv"
+            created_file = rf"./Datasets/Outputs/Fill_Negatives/{file_num}/P4_Chunk_{counter}.csv"
             with open(created_file, mode ="a", newline="") as new_file:
                 writer = csv.writer(new_file)
                 writer.writerow(CHUNK_HEADERS)
@@ -244,7 +244,7 @@ def upload_file(file_path: str, file_name: str) -> None:
 
     client_sftp = client.open_sftp()
 
-    dest_path = os.getenv("DEST_PATH")
+    dest_path = os.getenv("IMAGE_DEST_PATH")
     client_sftp.put(file_path, os.path.join(dest_path, file_name).replace("\\","/"))
     
 
@@ -274,7 +274,7 @@ def retrieve_files() -> None:
     
 
 def directories() -> None:
-    path = r"./Datasets/Outputs/New_Voxels"
+    path = "Datasets/SectionImages"
     directory = os.fsencode(path)
   
     for file in os.listdir(directory):
@@ -282,6 +282,3 @@ def directories() -> None:
         file_path = f"{path}/{file_name}"
         upload_file(file_path, file_name)
         
-
-
-

@@ -93,7 +93,7 @@ def group_all_data() -> list[dict]:
 
     return result
  
-def get_section_image_ids() -> None:
+def section_image_mapping() -> None:
     '''
     Create a singular csv file with the following Columns
     1. Has the section_dataset_id's
@@ -180,8 +180,8 @@ def read_chunk_files(path: str) -> tuple:
     Takes in a chunk file path
 
     Returns a dictionary.
-    key = voxels coordinates in a tuple
-    value = list of tuples which has: (section image,x,y))
+    key: tuple = voxels coordinates (x,y,z)
+    value: list[tuple] = gene,section image, and seed pixel coords (gene,section_image_id,x,y)
     '''
     result = {}
 
@@ -189,6 +189,7 @@ def read_chunk_files(path: str) -> tuple:
     key = ast.literal_eval(file["Voxel"][0])
     result[key] = []
 
+    genes = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
     #first flatten out the list
     for row in file['Section_Image']:
         new_row = json.loads(row.replace("\'","\""))
@@ -197,8 +198,10 @@ def read_chunk_files(path: str) -> tuple:
             image = voxel['section_image_id']
             X = int(voxel["x"])
             Y = int(voxel["y"])
+            gene = int(voxel['section_data_set_id'])
+            gene = genes.loc[genes["Section_Dataset_Id"] == gene, "Gene"].values[0]
 
-            result[key].append((image,X,Y))
+            result[key].append((gene,image,X,Y))
 
     return result
 
@@ -345,6 +348,7 @@ def partition_genes() -> None:
             count+=1
             writer.writerow(row)
     laptop_file.close()
+
 
 def current_files() -> None:
     """
@@ -517,4 +521,27 @@ def split_section_ids(section_ids: list) -> list[list]:
         arr.append(section_ids[ind])
     
     return result
+
+def get_section_image_ids() -> None:
+    """
+    get all section images for the fill_negatives.
+    """
+    images = set()
+    for i in range(1, 9):
+        path = f"Datasets/Outputs/Fill_Negatives/{i}"
+        directory = os.fsencode(path)
+        for file in os.listdir(directory):
+            file_name = os.fsdecode(file)
+            file_path = f"{path}/{file_name}"
+            chunk = pd.read_csv(file_path)
+            for row in chunk['Section_Image']:
+                new_row = json.loads(row.replace("\'","\""))
+                for vox in new_row:
+                    image_id = vox['image_sync']['section_image_id']
+                    images.add(image_id)
+    
+    # Change this to write image id's to a text file
+    print(images)
+
+get_section_image_ids()
 

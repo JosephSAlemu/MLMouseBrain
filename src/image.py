@@ -8,6 +8,7 @@ import requests
 import time
 import ast
 import os
+import paramiko
 from matplotlib.patches import Rectangle
 from math import modf
 from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files)
@@ -19,7 +20,11 @@ import matplotlib.image as mpimg
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
+"""client = paramiko.SSHClient()
+client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"), compress=True)
 
+sftp = client.open_sftp()"""
 def plot() -> None:
 
     '''
@@ -243,6 +248,24 @@ def binarized_image(section_image: int) -> None:
         with open(path, "wb") as file:
             for chunk in response:
                 file.write(chunk)
+
+def retrieve_binarized_image(section_image: int) -> None:
+    """
+    Retreves all the gene files in the remote linux server and puts it into New_Voxels directory
+    """
+
+
+    local_path = "Datasets/SectionImages"
+    remote_path = os.getenv("IMAGE_DEST_PATH")
+
+    file = f"{section_image}.jpg"
+    
+    remote = os.path.join(remote_path, file)
+    local = os.path.join(local_path, file)
+
+    sftp.get(remote, local)
+
+
 
 
 def binary_search(boxes: list[(tuple,tuple)], section: int, seed: tuple) -> int:
@@ -524,7 +547,7 @@ def average_voxels(binned_voxels:dict) -> dict:
     
 def fill_negative_density(file_num: int, start: int, stop: int) -> None:
     """
-    takes in a file_num for the P4 Section Laptop file
+    takes in a file_num for the P4 Section Laptop file and a start/stop for threads
 
     takes in a start and stop for threading
     """
@@ -546,52 +569,60 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         X = voxel.loc[index, "X"]
         Y = voxel.loc[index, "Y"]
         Z = voxel.loc[index, "Z"]
-        reference_to_image(X, Y, Z, P4_MOUSE_REFERENCE_ID, section_ids, start)
+        reference_to_image(X, Y, Z, P4_MOUSE_REFERENCE_ID, section_ids, start, file_num)
         section_ids = []
         start+=1
 
 def measure_density(start: int, stop:int) -> list:
-    result = {}
+    """
+    takes start and stop for threads
+    
+    returns a dictionary of
+    key: voxels coordinates (x,y,z)
+    value: section image and seed pixel coords(section image,x,y))
+    """
+    chunks = {}
     while start <= stop:
         path = f"Datasets/Outputs/Fill_Negatives/P4_Chunk_{start}.csv"
 
-        result = result | read_chunk_files(path)
+        chunks = chunks | read_chunk_files(path)
         
         start+=1
     
     # Now download the image and then
-    for key, value in result.items():
+    result = {}
+    for key, value in chunks.items():
+        result[key] = []
         print(f"\n\n{key}\n\n")
         for section in value:
-            section_image_id = section[0]
-            X = section[1]
-            Y = section[2]
+            gene = section[0]
+            section_image_id = section[1]
+            X = section[2]
+            Y = section[3]
             
-            binarized_image(section_image_id)
+            retrieve_binarized_image(section_image_id)
             
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
 
             height, width, channels = image.shape
             x_min, x_max = X-25, X+25
             y_min, y_max = Y-25, Y+25
-
-            print((x_min, x_max))
             
-
+            expressed = 0
             if x_max-1 > width or y_max-1 > height:
                     #if the points are out of bounds of the image itself, skip this bin.
                 print(f"error on {key}: {section}")
             else:
                 for x in range(x_min, x_max):
-                    for y in range(y_points[0], y_points[1]):
+                    for y in range(y_min, y_max):
                         b, g, r = image[y,x]
 
                         if b > 0 or g > 0 or r > 0:
                             expressed+=1
                 gene_expression = expressed/DENSITY
-                    
+                result[key].append((gene, gene_expression))
+    return result
 
-            #expressed = 0
 
 
 def execute() -> None:
@@ -604,4 +635,4 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
-measure_density(0,1)
+#print(measure_density(0,1))

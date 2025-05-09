@@ -571,7 +571,7 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         start+=1
 
 
-def measure_density(start: int, stop:int) -> list:
+def measure_density(start: int, stop:int) -> dict:
     """
     takes start and stop for threads
     

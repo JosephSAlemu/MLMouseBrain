@@ -242,7 +242,6 @@ def binarized_image(section_image: int) -> None:
     if is_valid_image(section_image):
         path = rf"./Datasets/SectionImages/{section_image}.jpg"
         url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
-
         response = requests.get(url, stream=True)
         response.raise_for_status()
         with open(path, "wb") as file:
@@ -264,8 +263,6 @@ def retrieve_binarized_image(section_image: int) -> None:
     local = os.path.join(local_path, file)
 
     sftp.get(remote, local)
-
-
 
 
 def binary_search(boxes: list[(tuple,tuple)], section: int, seed: tuple) -> int:
@@ -413,7 +410,6 @@ def calculate_density_and_voxels(gene: str) -> None:
 
     upload_file(path, f"{gene}.csv")
 
- 
 
 def bin_voxels() -> None:
     """
@@ -544,7 +540,8 @@ def average_voxels(binned_voxels:dict) -> dict:
         density = density/len(value)
         return_dict[key] = density
     return return_dict
-    
+
+
 def fill_negative_density(file_num: int, start: int, stop: int) -> None:
     """
     takes in a file_num for the P4 Section Laptop file and a start/stop for threads
@@ -573,6 +570,7 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         section_ids = []
         start+=1
 
+
 def measure_density(start: int, stop:int) -> list:
     """
     takes start and stop for threads
@@ -580,6 +578,8 @@ def measure_density(start: int, stop:int) -> list:
     returns a dictionary of
     key: voxels coordinates (x,y,z)
     value: section image and seed pixel coords(section image,x,y))
+
+    if the point is in the bounds of the image and a density can be measured put it in
     """
     chunks = {}
     while start <= stop:
@@ -621,8 +621,8 @@ def measure_density(start: int, stop:int) -> list:
                             expressed+=1
                 gene_expression = expressed/DENSITY
                 result[key].append((gene, gene_expression))
+            #if the 
     return result
-
 
 
 def execute() -> None:
@@ -635,4 +635,3 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
-#print(measure_density(0,1))

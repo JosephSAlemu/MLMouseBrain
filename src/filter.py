@@ -6,7 +6,7 @@ import requests
 import paramiko
 import ast
 from validation import is_valid_voxel
-from constants import headers, DISTRIBUTED
+from constants import headers, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -522,26 +522,180 @@ def split_section_ids(section_ids: list) -> list[list]:
     
     return result
 
-def get_section_image_ids() -> None:
+def retrieve_data_from_files(func: int) -> None:
     """
-    get all section images for the fill_negatives.
+    Takes in a constant that represents the caller.
+    
+    returns either a set of all section images or a list of all the data depending on the function
     """
-    images = set()
+    if func == GET_IMAGE_IDS:
+        result = set()
+    elif func == GET_COORD_MAPPING or func == GET_DATA_MAPPING:
+        result = {}
+
     for i in range(1, 9):
         path = f"Datasets/Outputs/Fill_Negatives/{i}"
         directory = os.fsencode(path)
+        
         for file in os.listdir(directory):
             file_name = os.fsdecode(file)
             file_path = f"{path}/{file_name}"
             chunk = pd.read_csv(file_path)
+            
             for row in chunk['Section_Image']:
                 new_row = json.loads(row.replace("\'","\""))
+
                 for vox in new_row:
-                    image_id = vox['image_sync']['section_image_id']
-                    images.add(image_id)
+                    data = vox['image_sync']
+                    if func == GET_IMAGE_IDS:
+                        image_id = data['section_image_id']
+                        result.add(image_id)
+
+                    elif func == GET_DATA_MAPPING:
+                        section_id = data["section_data_set_id"]
+                        image_id = data['section_image_id']
+                        if section_id not in result:
+                            result[section_id] = []
+                        result[section_id].append(image_id)
+                    
+                    elif func == GET_COORD_MAPPING:
+                        image_id = data['section_image_id']
+                        coords = (data['x'], data['y'])
+                        if image_id not in result:
+                            result[image_id] = []                
+                        result[image_id].append(coords)
+
+    return result
+                    
+
+def get_section_image_ids() -> None:
+    """
+    iterates through 
+    """
     
+    images = retrieve_data_from_files(GET_IMAGE_IDS)
     # Change this to write image id's to a text file
     print(images)
+    print(len(images))
 
-get_section_image_ids()
+
+def remove_dictionary_duplicates(dictionary: dict) -> dict:
+    """
+    remove duplicate values for a dictionaries values
+    """
+    result = {}
+    for key, value in dictionary.items():
+        arr = []
+        for item in value:
+            if item not in arr:
+                arr.append(item)
+        result[key] = arr
+    
+    return result
+
+
+def create_image_coords_file() -> None:
+    coord_dict = retrieve_data_from_files(GET_COORD_MAPPING)
+
+    header =[
+        "Image",
+        "Coordinates"
+    ]
+    section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+    image_file = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
+
+    #handle duplicate section images
+    coord_dict = remove_dictionary_duplicates(coord_dict)
+
+    with open("Datasets/Outputs/P4_Image_Coords_v2.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(header) 
+        for image_id, coords in coord_dict.items():
+            writer.writerow([image_id, coords])
+
+
+
+
+def update_mappings() -> None:
+    """
+    iterates through the P4_Image_Cords mapping file and the P4_Section_Data mapping file and updates them.
+
+    Updating the P4 Image coords needs to be heavily revised.
+
+    For the love of everything good refactor this method. Figure out the bottleneck and speed up this process.
+    """
+
+    data = retrieve_data_from_files(GET_DATA_MAPPING)
+    section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+
+    file1 = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
+    file2 = pd.read_csv("Datasets/Outputs/P4_Image_Coords_v2.csv")
+    
+    header =[
+        "Image",
+        "Coordinates"
+    ]
+    
+    combined = {}
+
+    for _,row in file1.iterrows():
+        key = row["Image"]
+        value = row["Coordinates"]
+        if key not in combined:
+            combined[key] = []
+        coords = ast.literal_eval(value)
+        combined[key].extend(coords)
+    
+    for _,row in file2.iterrows():
+        key = row["Image"]
+        value = row["Coordinates"]
+        if key not in combined:
+            combined[key] = []
+        coords = ast.literal_eval(value)
+        combined[key].extend(coords)
+    
+    print(len(combined))
+    with open("Datasets/Outputs/P4_Image_Coords_v3.csv", "w") as file:
+        writer = csv.writer(file)
+        writer.writerow(header) 
+        for image_id, coords in combined.items():
+            writer.writerow([image_id, coords])
+    data = remove_dictionary_duplicates(data)
+    added = False
+    count = 0
+    for section_id,image_ids in data.items():
+        section = section_file["Section_Dataset_Id"] == int(section_id)
+        arr = section_file.loc[section, "Images"].values[0]
+        arr = ast.literal_eval(arr)
+        for image in image_ids:
+            if image not in arr:
+                arr.add(image)
+                added = True
+        if added == True:
+            section_file.loc[section, "Images"] = str(arr)
+            added = False
+        
+
+    section_file.to_csv("Datasets/Outputs/P4_Section_Data.csv", index=False)
+
+
+def get_seed_voxels() -> None:
+    """
+    Retrieves all the voxels before voxel binning that have a seed pixel associated with them
+
+    1. P4_Section_Data has Gene to Section image mapping.
+    2. P4_Image_Coords has Section image to seed pixel mapping.
+    3. New Voxel directory has Gene (file name) to section image and bin mapping
+
+    Goal: Recreate New_Voxels directory with seed pixel voxels
+    Steps:
+    1. Iterate over all files in the NewVoxel directory and create a file of the same name in the SeedVoxel directory
+    2. Iterate over all rows in each file
+    3. Get the section image, bin coordinate, and voxel
+    4. Open the P4_Image_Coords file
+    5. Retrieve the array of coordinates (use ast eval for the array)
+    6. Iterate over the array and cast each coordinate value to integers (since that's what I did when binning)
+    7. If the seed pixel fits in the bin, then put that row in that file in the SeedVoxel directory.
+    """
+    ...
 

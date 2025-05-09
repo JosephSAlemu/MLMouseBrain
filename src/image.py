@@ -371,7 +371,7 @@ def calculate_density_and_voxels(gene: str) -> None:
         for section_image_id in lst:
             #load image if not present. If present, does nothing.
             binarized_image(section_image_id)
-            image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
+            image = cv2.imread(f"./Datasets/SectionImages/{section_image_id}.jpg")
             
             #width = x
             #height = y
@@ -380,33 +380,22 @@ def calculate_density_and_voxels(gene: str) -> None:
             boxes = get_valid_boxes(section_image_id)            
 
 
-
             #Reminder: ( (min_x,max_x),(min_y,max_y) )
             for box in boxes:
-                
-                x_points = (box[0][0],box[0][1])
-                y_points = (box[1][0],box[1][1])
+                x_min, x_max = box[0][0], box[0][1]
+                y_min, y_max = box[1][0], box[1][1]
+                gene_expression = measure_density(x_min, x_max, y_min, y_max, image)
 
-
-                if x_points[1]-1 > width or y_points[1]-1 > height:
+                if gene_expression is None:
                     #if the points are out of bounds of the image itself, skip this bin.
                     writer.writerow([section_image_id, box, "error", "error", "error", "error"])
                     continue
-
-                expressed = 0
-               
-                for x in range(x_points[0], x_points[1]):
-                    for y in range(y_points[0], y_points[1]):
-                        b, g, r = image[y,x]
-
-                        if b > 0 or g > 0 or r > 0:
-                            expressed+=1
-                gene_expression = expressed/DENSITY
-                centroid_x = (x_points[0]+x_points[1])/2
-                centroid_y = (y_points[0]+y_points[1])/2
-                voxel = image_to_reference(section_image_id, centroid_x, centroid_y)
-                x,y,z = voxel
-                writer.writerow([section_image_id, box, x, y, z, gene_expression])
+                else:
+                    centroid_x = (x_min+x_max)/2
+                    centroid_y = (y_min+y_max)/2
+                    voxel = image_to_reference(section_image_id, centroid_x, centroid_y)
+                    x,y,z = voxel
+                    writer.writerow([section_image_id, box, x, y, z, gene_expression])
 
     upload_file(path, f"{gene}.csv")
 
@@ -570,8 +559,33 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         section_ids = []
         start+=1
 
+def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: cv::Mat) -> int | None:
+    """
+    measure a the density for a section image given a section_image_id, x_min & x_max for the width, and a y_min & y_max for the height
 
-def measure_density(start: int, stop:int) -> dict:
+    if the mins is less than zero or the max-1 (where range stops) is greater than the image, then return None
+    """
+    
+    height, width, channels = image.shape
+    if x_min < 0 or y_min < 0 or x_max-1 > width or y_max-1 > height:
+        return None
+    
+    expessed = 0
+    for x in range(x_min, x_max):
+        for y in range(y_min, y_max):
+            b, g, r = image[y,x]
+
+            if b > 0 or g > 0 or r > 0:
+                expressed+=1
+    gene_expression = expressed/DENSITY
+    return gene_expression
+    
+
+
+
+
+
+def get_expressions(file_num: int, start: int, stop: int) -> dict:
     """
     takes start and stop for threads
     
@@ -582,14 +596,17 @@ def measure_density(start: int, stop:int) -> dict:
     if the point is in the bounds of the image and a density can be measured put it in
     """
     chunks = {}
-    while start <= stop:
-        path = f"Datasets/Outputs/Fill_Negatives/8/P4_Chunk_{start}.csv"
 
-        chunks = chunks | read_chunk_files(path)
-        
+    file = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/laptops/P4_Voxel_Laptop{file_num}.csv")
+    while start <= stop:
+        print(start)
+        key = ast.literal_eval(file.loc[start, "Voxel"])
+        print(key)
+        val = ast.literal_eval(file.loc[start, "Section_Data"])
+        chunks[key] = val
         start+=1
-    
     # Now download the image and then
+    print(len(chunks))
     result = {}
     for key, value in chunks.items():
         result[key] = []
@@ -599,29 +616,30 @@ def measure_density(start: int, stop:int) -> dict:
             section_image_id = section[1]
             X = section[2]
             Y = section[3]
-            
+            x_min, x_max = X-25, X+25
+            y_min, y_max = Y-25, Y+25
+            print((x_min, x_max))
             retrieve_binarized_image(section_image_id)
             
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
 
-            height, width, channels = image.shape
-            x_min, x_max = X-25, X+25
-            y_min, y_max = Y-25, Y+25
-            
-            expressed = 0
-            if x_max-1 > width or y_max-1 > height:
-                    #if the points are out of bounds of the image itself, skip this bin.
+            gene_expression = measure_density(x_min, x_max, y_min, y_max, image)
+
+            print(gene_expression)
+            if gene_expression is None:
                 print(f"error on {key}: {section}")
             else:
-                for x in range(x_min, x_max):
-                    for y in range(y_min, y_max):
-                        b, g, r = image[y,x]
-
-                        if b > 0 or g > 0 or r > 0:
-                            expressed+=1
-                gene_expression = expressed/DENSITY
                 result[key].append((gene, gene_expression))
-            #if the 
+            
+    headers = [
+        "X",
+        "Y",
+        "Z"
+    ]
+    """
+    for
+    with open(f"Datasets/Outputs/Fill_Negatives/result{file_num}.csv", "w"):
+    """
     return result
 
 
@@ -635,3 +653,5 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
+
+#measure_density(1,0,10)

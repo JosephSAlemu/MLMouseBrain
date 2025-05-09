@@ -577,13 +577,13 @@ def measure_density(start: int, stop:int) -> dict:
     
     returns a dictionary of
     key: voxels coordinates (x,y,z)
-    value: section image and seed pixel coords(section image,x,y))
+    value: an array of gene name and gene expression value (gene, gene_expression)
 
     if the point is in the bounds of the image and a density can be measured put it in
     """
     chunks = {}
     while start <= stop:
-        path = f"Datasets/Outputs/Fill_Negatives/P4_Chunk_{start}.csv"
+        path = f"Datasets/Outputs/Fill_Negatives/8/P4_Chunk_{start}.csv"
 
         chunks = chunks | read_chunk_files(path)
         

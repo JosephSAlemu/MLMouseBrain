@@ -174,7 +174,6 @@ def get_unique_genes(common_genes: list[str]) -> list[str]:
     return result
 
 
-
 def read_chunk_files(path: str) -> tuple:
     '''
     Takes in a chunk file path
@@ -206,7 +205,6 @@ def read_chunk_files(path: str) -> tuple:
     return result
 
 
-
 def filter_common_genes() -> None:
     '''
     Filters out the common genes between a p-56 and p-4 mouse
@@ -232,7 +230,6 @@ def filter_common_genes() -> None:
     result.to_csv(r"./Datasets/Outputs/NewDenS_COMB_Genes.csv", index=True)
 
 
-
 def noise_threshold() -> None:
     '''
     Remove a Column (Gene) if it's values for all rows is below 0.001.
@@ -242,6 +239,7 @@ def noise_threshold() -> None:
     print(p4_df.columns)
 
     threshold = 0.001
+
 
 def get_all_chunks() -> list:
     '''
@@ -268,6 +266,7 @@ def get_path() -> str:
         temp = rf"./Datasets/Outputs/Chunks/P4_Chunk_{counter}.csv"
         counter+=1
     return temp
+
 
 def get_missing_ids() -> str:
     '''
@@ -304,6 +303,7 @@ def get_missing_ids() -> str:
     
     print(missing)
 
+
 def get_average() -> None:
     '''
     Gets the average of all the section images reference space coordinates
@@ -320,6 +320,31 @@ def get_average() -> None:
             new_Z = sum(file['Z'])/len(file['Z'])
             writer.writerow([new_X, new_Y, new_Z])   
         voxel+=1
+
+
+def partition_section_images(start: int, end: int) -> None:
+    header = [
+        "Voxel",
+        "Section_Data"
+    ]
+
+    for i in range(start, end):
+        path = f"Datasets/Outputs/Fill_Negatives/{i}"
+        directory = os.fsencode(path)
+        chunks = {}
+        count = 0
+        for file in os.listdir(directory):
+            print(count)
+            file_name = os.fsdecode(file)
+            file_path = f"{path}/{file_name}"
+            chunks = chunks | read_chunk_files(file_path)
+            count+=1
+
+        with open(f"Datasets/Outputs/Fill_Negatives/laptops/P4_Voxel_Laptop{i}.csv", "w") as file:
+            writer = csv.writer(file)
+            writer.writerow(header)
+            for voxel, section_data in chunks.items():
+                writer.writerow([voxel, section_data])
 
 
 def partition_genes() -> None:
@@ -699,3 +724,4 @@ def get_seed_voxels() -> None:
     """
     ...
 
+#partition_section_images()

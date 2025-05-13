@@ -589,6 +589,7 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[
     gene_expression = expressed_count / DENSITY
     return gene_expression
 
+
 def new_measure_density(regions: dict) -> dict:
     """
     parameter: dict
@@ -628,6 +629,8 @@ def new_measure_density(regions: dict) -> dict:
                 result.append((key, gene, gene_expression))
         count+=1
     return result
+
+
 def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
     """
     takes start and stop for threads.
@@ -653,7 +656,32 @@ def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
         start+=1
     return chunks
 
-def test(file_num: int, start: int, stop: int) -> None:
+
+def download_all_images(chunks: dict) -> None:
+    """
+    downloads all the images before calling get_expressions to speed up the process
+    """
+    image_cache = {}
+    for key, value in chunks.items():
+        for section in value:
+            section_image_id = int(section[1])
+            if section_image_id not in image_cache:
+                image_cache[section_image_id] = True
+                binarized_image(section_image_id)
+
+
+def get_expressions(file_num: int, start: int, stop: int) -> dict:
+    """
+    takes start and stop for threads.
+    7535
+    
+    returns a dictionary of
+    key: voxels coordinates (x,y,z)
+    value: an array of gene name and gene expression value (gene, gene_expression)
+
+    if the point is in the bounds of the image and a density can be measured put it in
+    """
+
     chunks = deserialize_voxels(file_num, start, stop)
     download_all_images(chunks)
     result = {}
@@ -690,87 +718,6 @@ def test(file_num: int, start: int, stop: int) -> None:
     dataframe.to_csv(path, index=False)
 
 
-def download_all_images(chunks: dict) -> None:
-    """
-    downloads all the images before calling get_expressions to speed up the process
-    """
-    image_cache = {}
-    for key, value in chunks.items():
-        for section in value:
-            section_image_id = int(section[1])
-            if section_image_id not in image_cache:
-                image_cache[section_image_id] = True
-                binarized_image(section_image_id)
-
-
-def get_expressions(file_num: int, start: int, stop: int) -> dict:
-    """
-    takes start and stop for threads.
-    7535
-    
-    returns a dictionary of
-    key: voxels coordinates (x,y,z)
-    value: an array of gene name and gene expression value (gene, gene_expression)
-
-    if the point is in the bounds of the image and a density can be measured put it in
-    """
-
-
-    chunks = deserialize_voxels(file_num, start, stop)
-    download_all_images(chunks)
-
-    """
-    I need to give measure density an array of
-    """
-    result = {}
-    for key, value in chunks.items():
-        result[key] = []
-        print(f"\n\n{key}\n\n")
-        for section in value:
-            gene = section[0]
-            section_image_id = int(section[1])
-            X = section[2]
-            Y = section[3]
-            x_min, x_max = X-25, X+25
-            y_min, y_max = Y-25, Y+25
-            print(((x_min, x_max),(y_min, y_max)))
-
-            image = image_cache.get_image(section_image_id)
-
-            gene_expression = measure_density(x_min, x_max, y_min, y_max, image)
-
-            print(gene_expression)
-            if gene_expression is None:
-                print(f"error on {key}: {section}")
-            else:
-                result[key].append((gene, gene_expression))
-    print("done")
-    #fill the rest of the headers with the rest of the columns values
-    path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
-
-    create_sub_voxel_dataframe(path)
-
-    dataframe = pd.read_csv(path)
-    """
-    iterate over key value pairs of the dictionary, 
-    """
-    for coordinate, expression in result.items():
-        X = coordinate[0]
-        Y = coordinate[1]
-        Z = coordinate[2]
-        gene = expression[0]
-        gene_expression = expression[1]
-
-        X_col = dataframe["X"] == X
-        Y_col = dataframe["Y"] == Y
-        Z_col = dataframe["Z"] == Z
-        coords = X_col & Y_col & Z_col
-
-        dataframe.loc[coords, gene] = gene_expression
-
-    dataframe.to_csv(path, index=False)
-
-
 def execute() -> None:
     """
     Deprecated method
@@ -781,18 +728,4 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
-def benchmark() ->  None:
-    time_start = time.perf_counter()
-    res1 = test(1,1,1)
-    time_end = time.perf_counter()
-    print(time_end-time_start)
-    time_start = time.perf_counter()
-    res2 = test2(1,1,1)
-    time_end = time.perf_counter()
-    print(time_end-time_start)
-
-    print(res1)
-    print(res2)
-    if res1 == res2:
-        print("they are equal")
 

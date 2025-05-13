@@ -13,8 +13,6 @@ def is_valid_image(section_image: int) -> bool:
         return False
     return True
 
-
-
 def is_valid_chunk(path: str, count:int) -> bool | str:
     
     path = rf"./Datasets/Outputs/{path}/P4_Chunk_{count}.csv"

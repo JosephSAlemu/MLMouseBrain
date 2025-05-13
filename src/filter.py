@@ -495,6 +495,7 @@ def standard_deviation() -> None:
     print(f"y std: {stdev(y_vals)}")
     print(f"z std: {stdev(z_vals)}")
 
+
 def count_missing_expressions() -> None:
     """
     Count the number of missing gene expressions in the 50 micrometer P4 dataframe
@@ -525,6 +526,7 @@ def count_missing_expressions() -> None:
         
         start+=1
 
+
 def split_section_ids(section_ids: list) -> list[list]:
     """
     Split array of section id's into a 2d array of sections of 100
@@ -547,6 +549,7 @@ def split_section_ids(section_ids: list) -> list[list]:
         arr.append(section_ids[ind])
     
     return result
+
 
 def retrieve_data_from_files(func: int) -> None:
     """
@@ -639,6 +642,7 @@ def create_image_coords_file() -> None:
         for image_id, coords in coord_dict.items():
             writer.writerow([image_id, coords])
 
+
 def update_image_coords() -> None:
     """
     iterates through the P4_Image_Cords mapping file and the P4_Section_Data mapping file and updates them.
@@ -680,6 +684,7 @@ def update_image_coords() -> None:
         for image_id, coords in combined.items():
             writer.writerow([image_id, coords])
 
+
 def update_section_image() -> None:
     """
     update section image mapping
@@ -707,19 +712,26 @@ def update_section_image() -> None:
     section_file.to_csv("Datasets/Outputs/P4_Section_Data.csv", index=False)
 
 
-
 def create_sub_voxel_dataframe() -> None:
-    for file_num in range(1,9):
-        path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
-        if is_valid_dataframe(path):
-            #reminder I added the "old" here just to compare the dataframes
-            file = pd.read_csv(f"Datasets/Outputs/Old_P4_Section_Laptop{file_num}.csv")
-            genes = ["X", "Y", "Z"]
-            for gene in file["Gene"]:
-                genes.append(gene)
-                print(gene)
-            target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
-            target_file.to_csv(path, index=False)
+    """
+    creates old
+    """
+    path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
+    if is_valid_dataframe(path):
+        #reminder I added the "old" here just to compare the dataframes
+        file = pd.read_csv(f"Datasets/Outputs/P4_Section_Laptop{file_num}.csv")
+        genes = ["X", "Y", "Z"]
+        for gene in file["Gene"]:
+            genes.append(gene)
+            print(gene)
+        target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
+        target_file.to_csv(path, index=False)
+
+def compare_files(file1: str, file2: str) -> None:
+    file1 = pd.read_csv(file1)
+    file2 = pd.read_csv(file2)
+    diff = file1.compare(file2)
+    print(diff)
 
 
 def get_seed_voxels() -> None:
@@ -742,5 +754,3 @@ def get_seed_voxels() -> None:
     8. Everything from the old dataframe that was filled in is automatically filled by a seed pixel.
     """
     ...
-
-create_sub_voxel_dataframe()

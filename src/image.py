@@ -9,22 +9,24 @@ import time
 import ast
 import os
 import paramiko
+from typing import Type
 from matplotlib.patches import Rectangle
 from math import modf
-from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files)
+from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID
 from api import (image_to_reference, upload_file, directories, reference_to_image)
 import matplotlib.image as mpimg
 
-p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
+
+"""p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
 client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"), compress=True)
 
-sftp = client.open_sftp()
+sftp = client.open_sftp()"""
 def plot() -> None:
 
     '''
@@ -248,6 +250,7 @@ def binarized_image(section_image: int) -> None:
             for chunk in response:
                 file.write(chunk)
 
+
 def retrieve_binarized_image(section_image: int) -> None:
     """
     Retreves all the gene files in the remote linux server and puts it into New_Voxels directory
@@ -389,7 +392,7 @@ def calculate_density_and_voxels(gene: str) -> None:
                 if gene_expression is None:
                     #if the points are out of bounds of the image itself, skip this bin.
                     writer.writerow([section_image_id, box, "error", "error", "error", "error"])
-                    continue
+
                 else:
                     centroid_x = (x_min+x_max)/2
                     centroid_y = (y_min+y_max)/2
@@ -535,7 +538,8 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
     """
     takes in a file_num for the P4 Section Laptop file and a start/stop for threads
 
-    takes in a start and stop for threading
+    Purpose: for each 7535 voxels x 259 genes (gene splits), divide 7535 by n for m voxels for n threads.
+    Example: for the p4_section_laptop_1, we may have split 7535 by 11 (threads) to get 11 calls to this method of 685 voxels each for the same file.
     """
     # open the voxel master file and the p4_Section_laptop file
     # for each voxel, iterate over the genes in each p4_Section_laptop file
@@ -559,7 +563,8 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         section_ids = []
         start+=1
 
-def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: cv::Mat) -> int | None:
+
+def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[cv2]) -> int | None:
     """
     measure a the density for a section image given a section_image_id, x_min & x_max for the width, and a y_min & y_max for the height
 
@@ -567,27 +572,27 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: cv::M
     """
     
     height, width, channels = image.shape
+    print(f"height: {height} width: {width}")
+
     if x_min < 0 or y_min < 0 or x_max-1 > width or y_max-1 > height:
         return None
     
-    expessed = 0
+    expressed = 0
     for x in range(x_min, x_max):
         for y in range(y_min, y_max):
             b, g, r = image[y,x]
 
             if b > 0 or g > 0 or r > 0:
                 expressed+=1
+
     gene_expression = expressed/DENSITY
     return gene_expression
     
 
-
-
-
-
 def get_expressions(file_num: int, start: int, stop: int) -> dict:
     """
-    takes start and stop for threads
+    takes start and stop for threads.
+    7535
     
     returns a dictionary of
     key: voxels coordinates (x,y,z)
@@ -595,6 +600,8 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
 
     if the point is in the bounds of the image and a density can be measured put it in
     """
+
+
     chunks = {}
 
     file = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/laptops/P4_Voxel_Laptop{file_num}.csv")
@@ -618,8 +625,8 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
             Y = section[3]
             x_min, x_max = X-25, X+25
             y_min, y_max = Y-25, Y+25
-            print((x_min, x_max))
-            retrieve_binarized_image(section_image_id)
+            print(((x_min, x_max),(y_min, y_max)))
+            binarized_image(section_image_id)
             
             image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
 
@@ -631,16 +638,30 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
             else:
                 result[key].append((gene, gene_expression))
             
-    headers = [
-        "X",
-        "Y",
-        "Z"
-    ]
+    #fill the rest of the headers with the rest of the columns values
+    path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
+
+    create_sub_voxel_dataframe(path)
+
+    dataframe = pd.read_csv(path)
     """
-    for
-    with open(f"Datasets/Outputs/Fill_Negatives/result{file_num}.csv", "w"):
+    iterate over key value pairs of the dictionary, 
     """
-    return result
+    for coordinate, expression in result.items():
+        X = coordinate[0]
+        Y = coordinate[1]
+        Z = coordinate[2]
+        gene = expression[0]
+        gene_expression = expression[1]
+
+        X_col = dataframe["X"] == X
+        Y_col = dataframe["Y"] == Y
+        Z_col = dataframe["Z"] == Z
+        coords = X_col & Y_col & Z_col
+
+        dataframe.loc[coords, gene] = gene_expression
+
+    dataframe.to_csv(path, index=False)
 
 
 def execute() -> None:
@@ -653,5 +674,3 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
-
-#measure_density(1,0,10)

@@ -46,3 +46,16 @@ def is_valid_voxel(count: int) -> bool:
         return True
     else:
         print("idk how the hell this happened")
+
+def is_valid_dataframe(path: str) -> bool:
+    """
+    Have all validation functions follow this style to reduce the number of validation functions needed.
+
+    take in a path
+
+    if it's valid, return true, else return false
+
+    """
+    if os.path.exists(path):
+        return False
+    return True

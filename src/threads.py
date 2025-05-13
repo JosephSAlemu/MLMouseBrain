@@ -1,7 +1,7 @@
 from threading import Thread
-from image import (calculate_density_and_voxels, fill_negative_density)
+from image import (calculate_density_and_voxels, fill_negative_density, get_expressions)
 from filter import (partition_section_images)
-from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES)
+from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME)
 import pandas as pd
 
 
@@ -12,7 +12,6 @@ class Threads:
         self.file = file
         pass
             
-
     def retrieve_voxels(self) -> None:
         file = pd.read_csv(self.file)
         
@@ -28,6 +27,9 @@ class Threads:
     
     def create_files(self) -> None:
         partition_section_images(self.start, self.stop)
+
+    def create_dataframe(self) -> None:
+        get_expressions(self.file, self.start, self.stop)
         
 
 def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -> None:
@@ -52,9 +54,7 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
             threads.append(thread)
             thread.start()
         
-        for thread in threads:
-            thread.join()
-    
+        
     elif func == CREATE_FILES:
         count = 1
 
@@ -64,19 +64,35 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
             count+=increment
 
         for instance in thread_instances:
-            thread = Thread(target = instance.create_files)
+            thread = Thread(target = instance.create_dataframe)
             threads.append(thread)
             thread.start()
 
-        for thread in threads:
+    elif func == CREATE_DATAFRAME:
+        count = 0
+
+        while count < length:
+            #append threads in a list
+            print(f"{count} - {count+increment-1}")
+            thread_instances.append(Threads(count, count+increment-1, file))
+            count+=increment
+
+        for instance in thread_instances:
+            thread = Thread(target = instance.create_dataframe)
+            threads.append(thread)
+            thread.start()
+        
+    for thread in threads:
             thread.join()
 
 if __name__ == "__main__":
     #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
 
-    use_threads(7535, 11, 2, RETRIEVE_IMAGES)
+    #use_threads(7535, 11, 2, RETRIEVE_IMAGES)
     #use_threads(8, 8, None, CREATE_FILES)
+    use_threads(7535, 11, 1, CREATE_DATAFRAME)
+
 
 
 

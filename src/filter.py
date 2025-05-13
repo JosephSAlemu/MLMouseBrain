@@ -5,7 +5,7 @@ import csv
 import requests
 import paramiko
 import ast
-from validation import is_valid_voxel
+from validation import (is_valid_voxel, is_valid_dataframe)
 from constants import headers, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING
 from statistics import stdev
 
@@ -375,6 +375,7 @@ def partition_genes() -> None:
     laptop_file.close()
 
 
+
 def current_files() -> None:
     """
     checks the remote servers files and determines which laptop in the distributed system might've errored
@@ -432,7 +433,7 @@ def get_voxel_dataframe() -> None:
             res_file.write(f"{key}: {value}\n\n\n")
     
 
-def create_voxel_dataframe() -> None:
+def create_master_voxel_dataframe() -> None:
     header = [
         "X",
         "Y",
@@ -638,10 +639,7 @@ def create_image_coords_file() -> None:
         for image_id, coords in coord_dict.items():
             writer.writerow([image_id, coords])
 
-
-
-
-def update_mappings() -> None:
+def update_image_coords() -> None:
     """
     iterates through the P4_Image_Cords mapping file and the P4_Section_Data mapping file and updates them.
 
@@ -649,10 +647,6 @@ def update_mappings() -> None:
 
     For the love of everything good refactor this method. Figure out the bottleneck and speed up this process.
     """
-
-    data = retrieve_data_from_files(GET_DATA_MAPPING)
-    section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
-
     file1 = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
     file2 = pd.read_csv("Datasets/Outputs/P4_Image_Coords_v2.csv")
     
@@ -685,6 +679,15 @@ def update_mappings() -> None:
         writer.writerow(header) 
         for image_id, coords in combined.items():
             writer.writerow([image_id, coords])
+
+def update_section_image() -> None:
+    """
+    update section image mapping
+    """
+    data = retrieve_data_from_files(GET_DATA_MAPPING)
+    section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+
+    
     data = remove_dictionary_duplicates(data)
     added = False
     count = 0
@@ -702,6 +705,19 @@ def update_mappings() -> None:
         
 
     section_file.to_csv("Datasets/Outputs/P4_Section_Data.csv", index=False)
+
+
+
+def create_sub_voxel_dataframe(path: str) -> None:
+    if is_valid_dataframe(path):
+        file = pd.read_csv("Datasets/Outputs/P4_Section_Laptop1.csv")
+        genes = ["X", "Y", "Z"]
+        for gene in file["Gene"]:
+            genes.append(gene)
+            print(gene)
+        target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
+        target_file.to_csv(path, index=False)
+    print(target_file)
 
 
 def get_seed_voxels() -> None:
@@ -724,4 +740,3 @@ def get_seed_voxels() -> None:
     """
     ...
 
-#partition_section_images()

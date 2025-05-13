@@ -5,6 +5,11 @@ import pandas as pd
 def is_valid_image(section_image: int) -> bool:
     path = rf"./Datasets/SectionImages/{section_image}.jpg"
     if os.path.exists(path):
+        with open(path, 'rb') as f:
+            check_chars = f.read()[-2:]
+        if check_chars != b'\xff\xd9':
+            print(f"{section_image} is errored")
+            return True
         return False
     return True
 

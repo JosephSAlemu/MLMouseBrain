@@ -16,6 +16,7 @@ from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_ch
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID
 from api import (image_to_reference, upload_file, directories, reference_to_image)
+from io import StringIO
 import matplotlib.image as mpimg
 
 
@@ -241,7 +242,7 @@ def binarized_image(section_image: int) -> None:
     download the binarized image if it's not present
     '''
     
-    if is_valid_image(section_image):
+    while is_valid_image(section_image):
         path = rf"./Datasets/SectionImages/{section_image}.jpg"
         url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
         response = requests.get(url, stream=True)
@@ -253,9 +254,10 @@ def binarized_image(section_image: int) -> None:
 
 def retrieve_binarized_image(section_image: int) -> None:
     """
+    DEPRECATED
+
     Retreves all the gene files in the remote linux server and puts it into New_Voxels directory
     """
-
 
     local_path = "Datasets/SectionImages"
     remote_path = os.getenv("IMAGE_DEST_PATH")
@@ -571,21 +573,21 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[
     if the mins is less than zero or the max-1 (where range stops) is greater than the image, then return None
     """
     
-    height, width, channels = image.shape
-    print(f"height: {height} width: {width}")
-
-    if x_min < 0 or y_min < 0 or x_max-1 > width or y_max-1 > height:
+    height, width = image.shape[:2]
+    if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
         return None
-    
-    expressed = 0
-    for x in range(x_min, x_max):
-        for y in range(y_min, y_max):
-            b, g, r = image[y,x]
 
-            if b > 0 or g > 0 or r > 0:
-                expressed+=1
+    # Extract the region of interest (ROI)
+    roi = image[y_min:y_max, x_min:x_max]
 
-    gene_expression = expressed/DENSITY
+    # Create a boolean mask of pixels where any channel is non-zero
+    expressed_mask = np.any(roi > 0, axis=2)
+
+    # Count the number of "expressed" pixels
+    expressed_count = np.count_nonzero(expressed_mask)
+
+    # Calculate density
+    gene_expression = expressed_count / DENSITY
     return gene_expression
     
 
@@ -674,3 +676,19 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
+def benchmark() ->  None:
+    time_start = time.perf_counter()
+    res1 = test(1,1,1)
+    time_end = time.perf_counter()
+    print(time_end-time_start)
+    time_start = time.perf_counter()
+    res2 = test2(1,1,1)
+    time_end = time.perf_counter()
+    print(time_end-time_start)
+
+    print(res1)
+    print(res2)
+    if res1 == res2:
+        print("they are equal")
+
+check()

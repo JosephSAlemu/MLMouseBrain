@@ -16,7 +16,6 @@ from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_ch
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID
 from api import (image_to_reference, upload_file, directories, reference_to_image)
-from io import StringIO
 import matplotlib.image as mpimg
 
 
@@ -589,9 +588,47 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[
     # Calculate density
     gene_expression = expressed_count / DENSITY
     return gene_expression
-    
 
-def get_expressions(file_num: int, start: int, stop: int) -> dict:
+def new_measure_density(regions: dict) -> dict:
+    """
+    parameter: dict
+    key: section_image_id
+    values: [( ((x_min, x_max),(y_min, y_max)), key, gene)
+
+    returns: list of tuples
+    tuple: (key, gene, gene_expression)
+    """
+    count = 0
+    result = []
+    for key, value in regions.items():
+        print(count)
+        section_image_id = key
+        image = cv2.imread(f"./Datasets/SectionImages/{section_image_id}.jpg")
+        height, width = image.shape[:2]
+
+        for section in value:
+            x_min, x_max = section[0][0][0], section[0][0][1]
+            y_min, y_max = section[0][1][0], section[0][1][1]
+            key = section[1]
+            gene = section[2]
+            if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
+                result.append((key, gene, None))
+            else:
+                # Extract the region of interest (ROI)
+                roi = image[y_min:y_max, x_min:x_max]
+
+                # Create a boolean mask of pixels where any channel is non-zero
+                expressed_mask = np.any(roi > 0, axis=2)
+
+                # Count the number of "expressed" pixels
+                expressed_count = np.count_nonzero(expressed_mask)
+
+                # Calculate density
+                gene_expression = expressed_count / DENSITY
+                result.append((key, gene, gene_expression))
+        count+=1
+    return result
+def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
     """
     takes start and stop for threads.
     7535
@@ -614,23 +651,91 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
         val = ast.literal_eval(file.loc[start, "Section_Data"])
         chunks[key] = val
         start+=1
-    # Now download the image and then
-    print(len(chunks))
+    return chunks
+
+def test(file_num: int, start: int, stop: int) -> None:
+    chunks = deserialize_voxels(file_num, start, stop)
+    download_all_images(chunks)
+    result = {}
+    for key, value in chunks.items():
+        for section in value:
+            section_image_id = int(section[1])
+            if section_image_id not in result:
+                result[section_image_id] = []
+            gene = section[0]
+            X = section[2]
+            Y = section[3]
+            x_min, x_max = X-25, X+25
+            y_min, y_max = Y-25, Y+25
+            result[section_image_id].append(( ((x_min, x_max),(y_min, y_max)), key, gene))
+    result = new_measure_density(result)
+    path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
+
+    dataframe = pd.read_csv(path)
+
+    for expression in result:
+        X = expression[0][0]
+        Y = expression[0][1]
+        Z = expression[0][2]
+        gene = expression[1]
+        gene_expression = expression[2]
+
+        X_col = dataframe["X"] == X
+        Y_col = dataframe["Y"] == Y
+        Z_col = dataframe["Z"] == Z
+        coords = X_col & Y_col & Z_col
+        if gene_expression is not None:
+            dataframe.loc[coords, gene] = gene_expression
+
+    dataframe.to_csv(path, index=False)
+
+
+def download_all_images(chunks: dict) -> None:
+    """
+    downloads all the images before calling get_expressions to speed up the process
+    """
+    image_cache = {}
+    for key, value in chunks.items():
+        for section in value:
+            section_image_id = int(section[1])
+            if section_image_id not in image_cache:
+                image_cache[section_image_id] = True
+                binarized_image(section_image_id)
+
+
+def get_expressions(file_num: int, start: int, stop: int) -> dict:
+    """
+    takes start and stop for threads.
+    7535
+    
+    returns a dictionary of
+    key: voxels coordinates (x,y,z)
+    value: an array of gene name and gene expression value (gene, gene_expression)
+
+    if the point is in the bounds of the image and a density can be measured put it in
+    """
+
+
+    chunks = deserialize_voxels(file_num, start, stop)
+    download_all_images(chunks)
+
+    """
+    I need to give measure density an array of
+    """
     result = {}
     for key, value in chunks.items():
         result[key] = []
         print(f"\n\n{key}\n\n")
         for section in value:
             gene = section[0]
-            section_image_id = section[1]
+            section_image_id = int(section[1])
             X = section[2]
             Y = section[3]
             x_min, x_max = X-25, X+25
             y_min, y_max = Y-25, Y+25
             print(((x_min, x_max),(y_min, y_max)))
-            binarized_image(section_image_id)
-            
-            image = cv2.imread(rf"./Datasets/SectionImages/{section_image_id}.jpg")
+
+            image = image_cache.get_image(section_image_id)
 
             gene_expression = measure_density(x_min, x_max, y_min, y_max, image)
 
@@ -639,7 +744,7 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
                 print(f"error on {key}: {section}")
             else:
                 result[key].append((gene, gene_expression))
-            
+    print("done")
     #fill the rest of the headers with the rest of the columns values
     path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
 
@@ -691,4 +796,3 @@ def benchmark() ->  None:
     if res1 == res2:
         print("they are equal")
 
-check()

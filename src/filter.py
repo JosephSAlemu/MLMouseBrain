@@ -708,16 +708,18 @@ def update_section_image() -> None:
 
 
 
-def create_sub_voxel_dataframe(path: str) -> None:
-    if is_valid_dataframe(path):
-        file = pd.read_csv("Datasets/Outputs/P4_Section_Laptop1.csv")
-        genes = ["X", "Y", "Z"]
-        for gene in file["Gene"]:
-            genes.append(gene)
-            print(gene)
-        target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
-        target_file.to_csv(path, index=False)
-    print(target_file)
+def create_sub_voxel_dataframe() -> None:
+    for file_num in range(1,9):
+        path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
+        if is_valid_dataframe(path):
+            #reminder I added the "old" here just to compare the dataframes
+            file = pd.read_csv(f"Datasets/Outputs/Old_P4_Section_Laptop{file_num}.csv")
+            genes = ["X", "Y", "Z"]
+            for gene in file["Gene"]:
+                genes.append(gene)
+                print(gene)
+            target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
+            target_file.to_csv(path, index=False)
 
 
 def get_seed_voxels() -> None:
@@ -737,6 +739,8 @@ def get_seed_voxels() -> None:
     5. Retrieve the array of coordinates (use ast eval for the array)
     6. Iterate over the array and cast each coordinate value to integers (since that's what I did when binning)
     7. If the seed pixel fits in the bin, then put that row in that file in the SeedVoxel directory.
+    8. Everything from the old dataframe that was filled in is automatically filled by a seed pixel.
     """
     ...
 
+create_sub_voxel_dataframe()

@@ -1,5 +1,5 @@
 from threading import Thread
-from image import (calculate_density_and_voxels, fill_negative_density, get_expressions)
+from image import (calculate_density_and_voxels, fill_negative_density, get_expressions, test)
 from filter import (partition_section_images)
 from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME)
 import pandas as pd
@@ -29,7 +29,7 @@ class Threads:
         partition_section_images(self.start, self.stop)
 
     def create_dataframe(self) -> None:
-        get_expressions(self.file, self.start, self.stop)
+        test(self.file, self.start, self.stop)
         
 
 def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -> None:

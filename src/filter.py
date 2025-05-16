@@ -6,7 +6,8 @@ import requests
 import paramiko
 import ast
 from validation import (is_valid_voxel, is_valid_dataframe)
-from constants import headers, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING
+from image import (get_valid_boxes)
+from constants import headers, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING, GET_SEED_PIXELS
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -323,10 +324,7 @@ def get_average() -> None:
 
 
 def partition_section_images(start: int, end: int) -> None:
-    header = [
-        "Voxel",
-        "Section_Data"
-    ]
+    header = ["Voxel","Section_Data"]
 
     for i in range(start, end):
         path = f"Datasets/Outputs/Fill_Negatives/{i}"
@@ -433,11 +431,7 @@ def get_voxel_dataframe() -> None:
     
 
 def create_master_voxel_dataframe() -> None:
-    header = [
-        "X",
-        "Y",
-        "Z"
-    ]
+    header = ["X","Y","Z"]
     file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
     for gene in file["Gene"]:
         header.append(str(gene))
@@ -624,10 +618,7 @@ def remove_dictionary_duplicates(dictionary: dict) -> dict:
 def create_image_coords_file() -> None:
     coord_dict = retrieve_data_from_files(GET_COORD_MAPPING)
 
-    header =[
-        "Image",
-        "Coordinates"
-    ]
+    header =["Image", "Coordinates"]
     section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
     image_file = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
 
@@ -652,10 +643,7 @@ def update_image_coords() -> None:
     file1 = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
     file2 = pd.read_csv("Datasets/Outputs/P4_Image_Coords_v2.csv")
     
-    header =[
-        "Image",
-        "Coordinates"
-    ]
+    header =["Image", "Coordinates"]
     
     combined = {}
 
@@ -768,7 +756,6 @@ def bin_expression_values() -> None:
         for cell in n_row:
             if cell != -1:
                 values.append(cell)
-            
 
     return (bins, values)
 
@@ -777,21 +764,13 @@ def get_seed_voxels() -> None:
     """
     Retrieves all the voxels before voxel binning that have a seed pixel associated with them
 
-    1. P4_Section_Data has Gene to Section image mapping.
-    2. P4_Image_Coords has Section image to seed pixel mapping.
-    3. New Voxel directory has Gene (file name) to section image and bin mapping
-
-    Goal: Recreate New_Voxels directory with seed pixel voxels
-    Steps:
-    1. Iterate over all files in the NewVoxel directory and create a file of the same name in the SeedVoxel directory
-    2. Iterate over all rows in each file
-    3. Get the section image, bin coordinate, and voxel
-    4. Open the P4_Image_Coords file
-    5. Retrieve the array of coordinates (use ast eval for the array)
-    6. Iterate over the array and cast each coordinate value to integers (since that's what I did when binning)
-    7. If the seed pixel fits in the bin, then put that row in that file in the SeedVoxel directory.
-    8. Every -1 value in the old dataframe that was replaced is automatically filled by a seed pixel.
+    Call get_valid_boxes with GET_SEED_PIXELS constant
     """
-    ...
+    headers = ["X","Y","Z", "Image", "Gene"]
 
+    with open("Datasets/Outputs/Seed_Voxel/SeedVoxels.csv", "w", newline="") as seed_file:
+        #iterate over each section 
+        valid_boxes = get_valid_boxes()
 
+                        
+get_seed_voxels()

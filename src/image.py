@@ -194,8 +194,7 @@ def histogram() -> None:
     plt.show()
 
 
-
-def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
+def get_valid_boxes(section_image_id: str, func: int) -> list[tuple,tuple]:
     '''
     Takes in a section_image_id
     retrieves the section_dataset_id associated with the gene
@@ -263,12 +262,16 @@ def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
     if len(points) > 1:
         for seed in points:
             index = binary_search(boxes, len(grid_y)-1, seed)
-            dilated = binary_dilation(boxes, len(grid_y)-1, index)
-            valid_boxes.update(dilated)
+            if func == BINARY_DILATION:
+                dilated = binary_dilation(boxes, len(grid_y)-1, index)
+                valid_boxes.update(dilated)
+            else if func == GET_SEED_PIXELS:
+                valid_boxes.update(boxes[index])
+
     else:
         valid_boxes.update(boxes)
 
-    return(valid_boxes)
+    return valid_boxes
         
 
 def binarized_image(section_image: int) -> None:
@@ -763,5 +766,3 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
-
-histogram()

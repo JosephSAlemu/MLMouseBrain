@@ -375,7 +375,6 @@ def partition_genes() -> None:
     laptop_file.close()
 
 
-
 def current_files() -> None:
     """
     checks the remote servers files and determines which laptop in the distributed system might've errored
@@ -520,7 +519,6 @@ def count_missing_expressions() -> None:
 
             print(f"{gene} and {dataset}")
             
-        
         print(len(columns))
         print(file[columns])
         
@@ -547,7 +545,7 @@ def split_section_ids(section_ids: list) -> list[list]:
             result.append(arr)
             arr = []
         arr.append(section_ids[ind])
-    
+
     return result
 
 
@@ -707,12 +705,11 @@ def update_section_image() -> None:
         if added == True:
             section_file.loc[section, "Images"] = str(arr)
             added = False
-        
 
     section_file.to_csv("Datasets/Outputs/P4_Section_Data.csv", index=False)
 
 
-def create_sub_voxel_dataframe() -> None:
+def create_sub_voxel_dataframe(file_num: int) -> None:
     """
     creates old
     """
@@ -727,11 +724,26 @@ def create_sub_voxel_dataframe() -> None:
         target_file = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv", usecols=genes)
         target_file.to_csv(path, index=False)
 
-def compare_files(file1: str, file2: str) -> None:
-    file1 = pd.read_csv(file1)
-    file2 = pd.read_csv(file2)
-    diff = file1.compare(file2)
-    print(diff)
+
+def merge_data_frames() -> None:
+    """
+    Walks over directory of sub dataframes and merges them into one
+
+    Sorts all the frames so they get merged in order
+    """
+    dir_path = "Datasets/Outputs/Fill_Negatives/dataframes"
+    directory = sorted(os.listdir(dir_path))
+    prev = None
+
+    for file in directory:
+        file = os.path.join(dir_path, file)
+        df = pd.read_csv(file)
+
+        if prev is not None:
+            prev = pd.merge(prev, df, on=["X", "Y", "Z"])
+        else:
+            prev = df
+    prev.to_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv", index=False)
 
 
 def get_seed_voxels() -> None:
@@ -751,6 +763,9 @@ def get_seed_voxels() -> None:
     5. Retrieve the array of coordinates (use ast eval for the array)
     6. Iterate over the array and cast each coordinate value to integers (since that's what I did when binning)
     7. If the seed pixel fits in the bin, then put that row in that file in the SeedVoxel directory.
-    8. Everything from the old dataframe that was filled in is automatically filled by a seed pixel.
+    8. Every -1 value in the old dataframe that was replaced is automatically filled by a seed pixel.
     """
     ...
+
+
+merge_data_frames()

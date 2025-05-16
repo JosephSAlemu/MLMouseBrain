@@ -64,7 +64,7 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
             count+=increment
 
         for instance in thread_instances:
-            thread = Thread(target = instance.create_dataframe)
+            thread = Thread(target = instance.create_files)
             threads.append(thread)
             thread.start()
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     #use_threads(7535, 11, 2, RETRIEVE_IMAGES)
     #use_threads(8, 8, None, CREATE_FILES)
-    use_threads(7535, 11, 1, CREATE_DATAFRAME)
+    use_threads(7535, 11, 2, CREATE_DATAFRAME)
 
 
 

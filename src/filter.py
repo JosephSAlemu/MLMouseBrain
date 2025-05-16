@@ -711,7 +711,7 @@ def update_section_image() -> None:
 
 def create_sub_voxel_dataframe(file_num: int) -> None:
     """
-    creates old
+    creates subdataframes for parallel processing
     """
     path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
     if is_valid_dataframe(path):
@@ -730,6 +730,8 @@ def merge_data_frames() -> None:
     Walks over directory of sub dataframes and merges them into one
 
     Sorts all the frames so they get merged in order
+
+    To do: just make all negative expressions NaN.
     """
     dir_path = "Datasets/Outputs/Fill_Negatives/dataframes"
     directory = sorted(os.listdir(dir_path))
@@ -744,6 +746,31 @@ def merge_data_frames() -> None:
         else:
             prev = df
     prev.to_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv", index=False)
+
+
+def bin_expression_values() -> None:
+    """
+    Bins expression values into the following by index
+    bins[0] = [0]
+    bins[1] = (0, .001]
+    bins[2] = (.001, .01]
+    bins[3] = (.01, .1]
+    bins[4] = (.1, 1]
+
+    returns an array of all the bins
+    """
+    bins = [0, .001, .01, .1, 1]
+    values = []
+    df = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv")
+    for _, row in df.iterrows():
+        #    Skip X,Y, and Z
+        n_row = row[3:]
+        for cell in n_row:
+            if cell != -1:
+                values.append(cell)
+            
+
+    return (bins, values)
 
 
 def get_seed_voxels() -> None:
@@ -768,4 +795,3 @@ def get_seed_voxels() -> None:
     ...
 
 
-merge_data_frames()

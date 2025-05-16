@@ -12,7 +12,7 @@ import paramiko
 from typing import Type
 from matplotlib.patches import Rectangle
 from math import modf
-from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe)
+from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID
 from api import (image_to_reference, upload_file, directories, reference_to_image)
@@ -158,6 +158,41 @@ def plot() -> None:
 
             #VERIFY THAT THE DILATION WORKED BY ADDING BLUE POINTS TO THE CENTER OF EVERY BOX POST DILATION
     plt.show()
+
+
+def histogram() -> None:
+    """
+    For now creates a histogram of the distribution of all the values
+    """
+    bin_edges, values = bin_expression_values()
+
+
+    # Define labels
+    labels = ['(0, .001]', '(.001, .01]', '(.01, .1]', '(.1, 1]']
+
+    # Split zeros
+    zero_mask = pd.Series(values) == 0
+    zero_count = zero_mask.sum()
+    nonzero_values = pd.Series(values)[~zero_mask]
+
+    # Bin non-zero values
+    binned = pd.cut(nonzero_values, bins=bin_edges, right=True)
+
+    # Count binned values
+    counts = binned.value_counts(sort=False)
+
+    # Add the zero bin manually
+    counts = pd.Series([zero_count], index=['0'])._append(counts)
+
+    print(counts)
+    # Plot
+    plt.bar(counts.index.astype(str), counts.values)
+    plt.yscale('log')
+    plt.xlabel("Bins")
+    plt.ylabel("Frequency")
+    plt.title("Custom Binning Histogram")
+    plt.show()
+
 
 
 def get_valid_boxes(section_image_id: str) -> list[tuple,tuple]:
@@ -729,3 +764,4 @@ def execute() -> None:
             calculate_density_and_voxels(gene)
 
 
+histogram()

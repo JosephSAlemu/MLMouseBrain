@@ -139,7 +139,7 @@ def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, co
     elif mouse == P4_MOUSE_REFERENCE_ID:
         # Reference to Micron conversion
         X,Y,Z = float(X), float(Y), float(Z)
-        n_X, n_Y, n_Z = X*200, Y*200, Z*200
+        n_X, n_Y, n_Z = X*160, Y*160, Z*160
 
         if is_valid_chunk("Fill_Negatives", counter):
             created_file = rf"./Datasets/Outputs/Fill_Negatives/{file_num}/P4_Chunk_{counter}.csv"

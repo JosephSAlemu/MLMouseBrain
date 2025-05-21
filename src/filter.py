@@ -736,6 +736,10 @@ def merge_data_frames() -> None:
     prev.to_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv", index=False)
 
 
+def count_negatives():
+    
+
+
 def bin_expression_values() -> None:
     """
     Bins expression values into the following by index

@@ -265,7 +265,7 @@ def get_valid_boxes(section_image_id: str, func: int) -> list[tuple,tuple]:
             if func == BINARY_DILATION:
                 dilated = binary_dilation(boxes, len(grid_y)-1, index)
                 valid_boxes.update(dilated)
-            else if func == GET_SEED_PIXELS:
+            elif func == GET_SEED_PIXELS:
                 valid_boxes.update(boxes[index])
 
     else:
@@ -681,7 +681,6 @@ def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
     if the point is in the bounds of the image and a density can be measured put it in
     """
 
-
     chunks = {}
 
     file = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/laptops/P4_Voxel_Laptop{file_num}.csv")
@@ -766,3 +765,58 @@ def execute() -> None:
         if is_valid_p4_voxel_gene(gene):
             calculate_density_and_voxels(gene)
 
+
+def measure_temp(x_min: int, x_max: int, y_min: int, y_max: int, section_image_id: str) -> int | None:
+    """
+    measure a the density for a section image given a section_image_id, x_min & x_max for the width, and a y_min & y_max for the height
+
+    if the mins is less than zero or the max-1 (where range stops) is greater than the image, then return None
+    """
+    image = cv2.imread(f"./Datasets/SectionImages/{section_image_id}.jpg")
+    
+    height, width = image.shape[:2]
+
+    print(height, width, x_min, x_max, y_min, y_max, section_image_id)
+    if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
+        return None
+
+    # Extract the region of interest (ROI)
+    roi = image[y_min:y_max, x_min:x_max]
+
+    # Create a boolean mask of pixels where any channel is non-zero
+    expressed_mask = np.any(roi > 0, axis=2)
+
+    # Count the number of "expressed" pixels
+    expressed_count = np.count_nonzero(expressed_mask)
+
+    # Calculate density
+    gene_expression = expressed_count / DENSITY
+    return gene_expression
+
+
+def get_seed_voxels() -> None:
+    """
+    Retrieves all the voxels before voxel binning that have a seed pixel associated with them
+
+    Call get_valid_boxes with GET_SEED_PIXELS constant
+    """
+    headers = ["X","Y","Z", "Image", "Gene"]
+
+    with open("Datasets/Outputs/Seed_Voxel/SeedVoxels.csv", "w", newline="") as seed_file:
+        #iterate over each section 
+        #valid_boxes = get_valid_boxes()
+        ...
+
+
+def temp_input(section_image: int, X: int, Y: int) -> None:
+    X = int(X)
+    Y = int(Y)
+    x_min, x_max = X-25, X+25
+    y_min, y_max = Y-25, Y+25
+    binarized_image(section_image)
+
+
+    print(measure_temp(x_min, x_max, y_min, y_max, section_image))
+
+
+temp_input(100084380, 8067.632679197961, 5671.847921759916)

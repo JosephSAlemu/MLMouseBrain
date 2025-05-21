@@ -1,6 +1,6 @@
 SIZE = 1464
 
-headers = [
+HEADERS = [
 "X","Y","Z"
 ]
 

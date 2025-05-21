@@ -8,7 +8,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
 from filter import group_data, split_section_ids
-from constants import (SIZE, headers, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS)
+from constants import (SIZE, HEADER, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS)
 from validation import is_valid_voxel, is_valid_chunk
 
 
@@ -37,10 +37,13 @@ def api_calls() -> None:
         count+=1
 
 
-def download_section_images() -> None: 
+def download_section_images() -> None:
+    """
+    deprecated
+    """
     test = set()
     count = 0
-    while count < SIZE:
+    while count <= SIZE:
         file = pd.read_csv(rf"./Datasets/Outputs/Chunks/P4_Chunk_{count}.csv")
         for row in file['Section_Image']:
             new_row = json.loads(row.replace("\'","\""))
@@ -114,6 +117,8 @@ def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, co
                 writer = csv.writer(new_file)
                 writer.writerow(CHUNK_HEADERS)
                 
+                image_ids = []
+
                 for line in file:
                     if len(image_ids) == 100:
                         url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
@@ -121,12 +126,12 @@ def reference_to_image(X: int, Y: int, Z: int, mouse: int, section_ids: list, co
                         if response.status_code == 200:
                             data = f"{response.json()['msg']}"
                             writer.writerow([counter, data])
-                            image_ids = []
                             image_ids.append(line)
                         else:
                             print(f"ISSUE WITH QUERY {url}")
                     else:
                         image_ids.append(int(line))
+                        
                 url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
                 response = requests.get(url)
                 if response.status_code == 200:
@@ -187,26 +192,6 @@ def fifty_chunk(X: int, Y: int, Z: int, count: int) -> None:
     print(f"done {counter}")
 
 
-def P56_Micron_Multiply() -> None:
-    """
-    takes all the p-56 voxel coordinates and converts them to microns by multiplying them by 200
-
-    Then, it runs it through the API
-
-    Modify to do the following:
-    Take mouse number. Choose mouse multiplication constant based on mouse number.
-
-    """
-    file = pd.read_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Inputs\NewDenC.csv')
-    file['X'] = file['X'] * 200
-    file['Y'] = file['Y'] * 200
-    file['Z'] = file['Z'] * 200
-    
-    file.to_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Outputs\NewDenC_Microns.csv', index = False)
-
-
-
-
 def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> tuple | None:
     """
     takes in the section image for a gene and the centroid coordinates for the bin in that section image
@@ -215,7 +200,6 @@ def image_to_reference(section_image_id: int, x_coord: int, y_coord:int) -> tupl
 
     returns the result of that query as tuple of the voxel coordinates
     """
-    
     
     url = f"http://api.brain-map.org/api/v2/image_to_reference/{section_image_id}.json?x={x_coord}&y={y_coord}"
     try:

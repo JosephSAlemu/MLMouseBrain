@@ -6,8 +6,7 @@ import requests
 import paramiko
 import ast
 from validation import (is_valid_voxel, is_valid_dataframe)
-from image import (get_valid_boxes)
-from constants import headers, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING, GET_SEED_PIXELS
+from constants import (HEADERS, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING, GET_SEED_PIXELS)
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -60,15 +59,14 @@ def group_data(voxel: int) -> list[dict]:
     '''
     Retrieves a List of corresponding Section Images for the p_4 mouse for the corresponding p-56 voxel inputted
 
-    I sort of forgot why I have an offset.
     '''
     dataset = pd.read_csv(rf"./Datasets/Outputs/Chunked/P4_Chunk_{voxel}.csv")
     temp = dataset["Section_Image"]
 
     start = 0
-    end = 20
+    end = 21
     result = []
-    while start <= end:
+    while start < end:
         j = temp[start]
         j = j.replace("\'","\"")
 
@@ -127,13 +125,6 @@ def get_section_dataset_ids() -> list:
         for id in file:
             result.append(int(id))
     return result
-
-def check_length() -> None:
-    '''
-    checks length
-    '''
-    mouse = pd.read_csv(r"./Datasets/Outputs/NewDenS_COMB_Genes.csv")
-    print(len(mouse.columns))
 
 
 def find_missing_genes():
@@ -269,7 +260,7 @@ def get_path() -> str:
     return temp
 
 
-def get_missing_ids() -> str:
+def get_missing_ids() -> list[int]:
     '''
     Finds which id's are in the dataset id text file but not in the P4_Chunks
     '''
@@ -280,9 +271,9 @@ def get_missing_ids() -> str:
     temp = pd.read_csv(r"./Datasets/Outputs/Chunked/P4_Chunk_0.csv")
     temp = temp["Section_Image"]
     start = 0
-    end = 20
+    end = 21
     res = []
-    while start <= end:
+    while start < end:
         j = temp[start]
         j = j.replace("\'","\"")
 
@@ -294,7 +285,8 @@ def get_missing_ids() -> str:
             start+=1
         
         except Exception:
-            ...
+            pass
+    
     missing = []
     print(len(res))
     print(len(ids))
@@ -302,10 +294,10 @@ def get_missing_ids() -> str:
         if i not in res:
             missing.append(i)
     
-    print(missing)
+    return missing
 
 
-def get_average() -> None:
+def write_average() -> None:
     '''
     Gets the average of all the section images reference space coordinates
     
@@ -315,7 +307,7 @@ def get_average() -> None:
         file = pd.read_csv(rf".\Datasets\Outputs\Voxels\P4_Voxel_{voxel}.csv")
         with open(rf".\Datasets\Outputs\Averaged_Voxels\P4_Voxel_{voxel}.csv", "w", newline="") as new_file:
             writer = csv.writer(new_file)
-            writer.writerow(headers)
+            writer.writerow(HEADERS)
             new_X = sum(file['X'])/len(file['X'])
             new_Y = sum(file['Y'])/len(file['Y'])
             new_Z = sum(file['Z'])/len(file['Z'])
@@ -456,7 +448,6 @@ def create_master_voxel_dataframe() -> None:
                     vox_info[index] = exp
             
             writer.writerow(vox_info)
-            vox_info = [-1] * len(header)
 
     print(vox_info)
     print(header)
@@ -489,42 +480,12 @@ def standard_deviation() -> None:
     print(f"z std: {stdev(z_vals)}")
 
 
-def count_missing_expressions() -> None:
-    """
-    Count the number of missing gene expressions in the 50 micrometer P4 dataframe
-    """
-    path = "Datasets/Outputs/P4_50_NewDenS.csv"
-
-    file = pd.read_csv(path)
-    start = 1
-    end = 8
-
-    while start <= end:
-        columns = [
-            "X",
-            "Y",
-            "Z"
-        ]
-        count = 0
-        laptop = pd.read_csv(rf"./Datasets/Outputs/P4_Section_Laptop{start}.csv")
-        for _,row in laptop.iterrows():
-            gene = row["Gene"]
-            dataset = row["Section_Dataset_Id"]
-
-            print(f"{gene} and {dataset}")
-            
-        print(len(columns))
-        print(file[columns])
-        
-        start+=1
-
-
-def split_section_ids(section_ids: list) -> list[list]:
+def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
     """
     Split array of section id's into a 2d array of sections of 100
     """
     length = len(section_ids)
-    if length < 101:
+    if length <= 100:
         return [section_ids]
     
     result = []
@@ -543,7 +504,7 @@ def split_section_ids(section_ids: list) -> list[list]:
     return result
 
 
-def retrieve_data_from_files(func: int) -> None:
+def retrieve_data_from_files(func: int) -> set | dict | None:
     """
     Takes in a constant that represents the caller.
     
@@ -553,7 +514,9 @@ def retrieve_data_from_files(func: int) -> None:
         result = set()
     elif func == GET_COORD_MAPPING or func == GET_DATA_MAPPING:
         result = {}
-
+    else:
+        return None
+    
     for i in range(1, 9):
         path = f"Datasets/Outputs/Fill_Negatives/{i}"
         directory = os.fsencode(path)
@@ -604,8 +567,10 @@ def remove_dictionary_duplicates(dictionary: dict) -> dict:
     """
     remove duplicate values for a dictionaries values
     """
+    """
     result = {}
     for key, value in dictionary.items():
+
         arr = []
         for item in value:
             if item not in arr:
@@ -613,12 +578,17 @@ def remove_dictionary_duplicates(dictionary: dict) -> dict:
         result[key] = arr
     
     return result
+    """
+    a = {}
+    for key, value in dictionary.items():
+        a[key] = list(set(value))
+    return a
 
 
 def create_image_coords_file() -> None:
     coord_dict = retrieve_data_from_files(GET_COORD_MAPPING)
 
-    header =["Image", "Coordinates"]
+    header = ["Image", "Coordinates"]
     section_file = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
     image_file = pd.read_csv("Datasets/Outputs/P4_Image_Coords.csv")
 
@@ -736,9 +706,8 @@ def merge_data_frames() -> None:
     prev.to_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv", index=False)
 
 
-def count_negatives():
+#def count_negatives():
     
-
 
 def bin_expression_values() -> None:
     """
@@ -756,6 +725,7 @@ def bin_expression_values() -> None:
     df = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv")
     for _, row in df.iterrows():
         #    Skip X,Y, and Z
+        # drop the columns x,y,z cause they could be in any order
         n_row = row[3:]
         for cell in n_row:
             if cell != -1:
@@ -763,18 +733,3 @@ def bin_expression_values() -> None:
 
     return (bins, values)
 
-
-def get_seed_voxels() -> None:
-    """
-    Retrieves all the voxels before voxel binning that have a seed pixel associated with them
-
-    Call get_valid_boxes with GET_SEED_PIXELS constant
-    """
-    headers = ["X","Y","Z", "Image", "Gene"]
-
-    with open("Datasets/Outputs/Seed_Voxel/SeedVoxels.csv", "w", newline="") as seed_file:
-        #iterate over each section 
-        valid_boxes = get_valid_boxes()
-
-                        
-get_seed_voxels()

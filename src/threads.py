@@ -1,7 +1,7 @@
 from threading import Thread
 from image import (calculate_density_and_voxels, fill_negative_density, get_expressions)
 from filter import (partition_section_images)
-from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME)
+from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME, FILE_START, FILE_END)
 import pandas as pd
 
 
@@ -85,13 +85,31 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
     for thread in threads:
             thread.join()
 
+def thread_threads(length: int, thread_count: int, func: int):
+    """
+    to thread threaded functions to be more efficient.
+    """
+    threads = []
+    if func == RETRIEVE_IMAGES:
+        for file_no in range(FILE_START, FILE_END):
+            thread = Thread(target = use_threads, args=(length, thread_count, file_no, func))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+
 if __name__ == "__main__":
     #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
 
-    #use_threads(7535, 11, 2, RETRIEVE_IMAGES)
+    thread_threads(7535, 11, RETRIEVE_IMAGES)
+
+
+
     #use_threads(8, 8, None, CREATE_FILES)
-    use_threads(7535, 11, 2, CREATE_DATAFRAME)
+    #use_threads(7535, 11, 2, CREATE_DATAFRAME)
 
 
 

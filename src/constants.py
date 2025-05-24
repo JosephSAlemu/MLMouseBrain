@@ -1,12 +1,15 @@
 SIZE = 1464
 
-HEADERS = [
-"X","Y","Z"
-]
+HEADERS = ["X","Y","Z"]
 
-CHUNK_HEADERS = [
-            "Voxel", "Section_Image"
-]
+FILE_START = 1
+
+FILE_END = 9
+
+CHUNK_HEADERS = ["Voxel", "Section_Image"]
+
+CHUNK_HEADERS_V2 = ["Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y"]
+
 DENSITY = 2500
 
 DISTRIBUTED = 259

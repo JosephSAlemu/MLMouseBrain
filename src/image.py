@@ -594,6 +594,7 @@ def fill_negative_density(file_num: int, start: int, stop: int) -> None:
         for _, gene in p4_laptop.iterrows():
             if voxel.loc[index, gene["Gene"]] == -1:
                 section_ids.append(gene["Section_Dataset_Id"])
+
         # Run through API here
         X = voxel.loc[index, "X"]
         Y = voxel.loc[index, "Y"]
@@ -805,7 +806,7 @@ def get_seed_voxels() -> None:
     with open("Datasets/Outputs/Seed_Voxel/SeedVoxels.csv", "w", newline="") as seed_file:
         #iterate over each section 
         #valid_boxes = get_valid_boxes()
-        ...
+        pass
 
 
 def temp_input(section_image: int, X: int, Y: int) -> None:
@@ -819,4 +820,4 @@ def temp_input(section_image: int, X: int, Y: int) -> None:
     print(measure_temp(x_min, x_max, y_min, y_max, section_image))
 
 
-temp_input(100084380, 8067.632679197961, 5671.847921759916)
+#temp_input(100084380, 8067.632679197961, 5671.847921759916)

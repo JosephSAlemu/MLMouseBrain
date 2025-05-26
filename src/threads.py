@@ -104,12 +104,12 @@ if __name__ == "__main__":
     #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
 
-    thread_threads(7535, 11, RETRIEVE_IMAGES)
+    #thread_threads(7535, 11, RETRIEVE_IMAGES)
 
 
 
     #use_threads(8, 8, None, CREATE_FILES)
-    #use_threads(7535, 11, 2, CREATE_DATAFRAME)
+    use_threads(7535, 11, 2, CREATE_DATAFRAME)
 
 
 

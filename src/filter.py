@@ -6,7 +6,7 @@ import requests
 import paramiko
 import ast
 from validation import (is_valid_voxel, is_valid_dataframe)
-from constants import (HEADERS, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING, GET_SEED_PIXELS)
+from constants import (HEADERS, DISTRIBUTED, GET_IMAGE_IDS, GET_DATA_MAPPING, GET_COORD_MAPPING, GET_SEED_PIXELS, FILE_START, FILE_END)
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -706,6 +706,40 @@ def merge_data_frames() -> None:
     prev.to_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv", index=False)
 
 
+def merge_chunks() -> None:
+    """
+    merges all chunks in each sub folder into one large chunk
+    """
+    for dir_num in range(FILE_START, FILE_END):
+        result_df = None
+        dir_path = f"Datasets/Outputs/Fill_Negatives/{dir_num}"
+        directory = sorted(os.listdir(dir_path))
+        counter = 0
+
+        for file in directory:
+            file_path = os.path.join(dir_path, file)
+            df = pd.read_csv(file_path)
+            result_df = pd.concat([result_df, df], ignore_index=True)
+            counter+=1
+            print(len(result_df))
+            print(counter)
+
+        result_df.to_csv(f"Datasets/Outputs/Fill_Negatives/P4_Complete_Chunk_{dir_num}.csv", index=False)
+
+
+    #handle the error folder
+    dir_path = "Datasets/Outputs/Fill_Negatives/error"
+    directory = os.listdir(dir_path)
+    result_df = None
+
+    for file in directory:
+        file_path = os.path.join(dir_path, file)
+        df = pd.read_csv(file_path)
+        result_df = pd.concat([result_df, df], ignore_index=True)
+
+    result_df.to_csv("Datasets/Outputs/Fill_Negatives/P4_Complete_Chunk_error.csv", index=False)
+
+
 def bin_expression_values() -> None:
     """
     Bins expression values into the following by index
@@ -729,4 +763,3 @@ def bin_expression_values() -> None:
                 values.append(cell)
 
     return (bins, values)
-

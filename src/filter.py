@@ -510,8 +510,6 @@ def retrieve_data_from_files(func: int, complete_chunk: int) -> list | dict | No
     
     returns either a set of all section images or a list of all the data depending on the function
     """
-    
-
     if func == GET_IMAGE_IDS:
         result = set()
     else:
@@ -609,7 +607,6 @@ def merge_chunks() -> None:
 
         result_df.to_csv(f"Datasets/Outputs/Fill_Negatives/P4_Complete_Chunk_{dir_num}.csv", index=False)
 
-
     #handle the error folder
     dir_path = "Datasets/Outputs/Fill_Negatives/error"
     directory = os.listdir(dir_path)
@@ -646,3 +643,4 @@ def bin_expression_values() -> None:
                 values.append(cell)
 
     return (bins, values)
+

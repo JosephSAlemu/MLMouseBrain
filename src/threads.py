@@ -1,7 +1,7 @@
 from threading import Thread
-from image import (calculate_density_and_voxels, fill_negative_density, get_expressions)
+from image import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
 from filter import (partition_section_images)
-from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME, FILE_START, FILE_END)
+from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME, FILE_START, FILE_END, REANALYSIS)
 import pandas as pd
 
 
@@ -19,9 +19,9 @@ class Threads:
             gene = file.iloc[index]["Gene"]
             calculate_density_and_voxels(gene)
     
-    def retrieve_images(self) -> None:
+    def reanalysis(self) -> None:
         """
-        find a way to thread the section images
+        threads reference-to-image
         """
         fill_negative_density(self.file, self.start, self.stop)
     
@@ -30,8 +30,14 @@ class Threads:
 
     def create_dataframe(self) -> None:
         get_expressions(self.file, self.start, self.stop)
-        
 
+    def download_section_images(self) -> None:
+        """
+        threads downloading all binary section images
+        """
+        download_section_images(self.start, self.stop)
+
+        
 def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
@@ -40,7 +46,7 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
     threads = []
     increment = length//thread_count
 
-    if func == RETRIEVE_IMAGES:
+    if func == REANALYSIS:
         count = 0
 
         while count < length:
@@ -50,10 +56,9 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
             count+=increment
 
         for instance in thread_instances:
-            thread = Thread(target = instance.retrieve_images)
+            thread = Thread(target = instance.reanalysis)
             threads.append(thread)
             thread.start()
-        
         
     elif func == CREATE_FILES:
         count = 1
@@ -73,15 +78,27 @@ def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -
 
         while count < length:
             #append threads in a list
-            print(f"{count} - {count+increment-1}")
-            thread_instances.append(Threads(count, count+increment-1, file))
+            print(f"{count} - {count+increment}")
+            thread_instances.append(Threads(count, count+increment, file))
             count+=increment
 
         for instance in thread_instances:
             thread = Thread(target = instance.create_dataframe)
             threads.append(thread)
             thread.start()
+    
+    elif func == RETRIEVE_IMAGES:
+        count = 0
+        while count < length:
+            print(f"{count}-{count+increment}")
+            thread_instances.append(Threads(count, count+increment, file))
+            count+=increment
         
+        for instance in thread_instances:
+            thread = Thread(target = instance.download_section_images)
+            threads.append(thread)
+            thread.start()
+
     for thread in threads:
             thread.join()
 
@@ -90,28 +107,24 @@ def thread_threads(length: int, thread_count: int, func: int):
     to thread threaded functions to be more efficient.
     """
     threads = []
-    if func == RETRIEVE_IMAGES:
-        for file_no in range(FILE_START, FILE_END):
-            thread = Thread(target = use_threads, args=(length, thread_count, file_no, func))
-            threads.append(thread)
-            thread.start()
+    for file_no in range(FILE_START, FILE_END):
+        thread = Thread(target = use_threads, args=(length, thread_count, file_no, func))
+        threads.append(thread)
+        thread.start()
 
-        for thread in threads:
-            thread.join()
+    for thread in threads:
+        thread.join()
 
 
 if __name__ == "__main__":
     #file_number = 8
     #use_threads(259, 7, f"./Datasets/Outputs/P4_Section_Laptop{file_number}.csv")
 
-    #thread_threads(7535, 11, RETRIEVE_IMAGES)
+    #thread_threads(7535, 11, REANALYSIS)
 
 
 
     #use_threads(8, 8, None, CREATE_FILES)
-    use_threads(7535, 11, 2, CREATE_DATAFRAME)
-
-
-
-
-    
+    #use_threads(7535, 11, 2, CREATE_DATAFRAME)
+    #use_threads(19608, 43, None, RETRIEVE_IMAGES)
+    use_threads(1547475, 25, 1, CREATE_DATAFRAME)

@@ -298,4 +298,4 @@ def directories() -> None:
         file_name = os.fsdecode(file)
         file_path = f"{path}/{file_name}"
         upload_file(file_path, file_name)
-        
+

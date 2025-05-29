@@ -479,7 +479,7 @@ def bin_voxels() -> None:
             writer.writerow(headers)
             values = {}
 
-            for _,row in gene_file.iterrows():
+            for _, row in gene_file.iterrows():
                 x = row["X"]
                 y = row["Y"]
                 z = row["Z"]
@@ -612,6 +612,7 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[
     """
     
     height, width = image.shape[:2]
+
     if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
         return None
 
@@ -627,47 +628,6 @@ def measure_density(x_min: int, x_max: int, y_min: int, y_max: int, image: Type[
     # Calculate density
     gene_expression = expressed_count / DENSITY
     return gene_expression
-
-
-def new_measure_density(regions: dict) -> dict:
-    """
-    parameter: dict
-    key: section_image_id
-    values: [( ((x_min, x_max),(y_min, y_max)), key, gene)
-
-    returns: list of tuples
-    tuple: (key, gene, gene_expression)
-    """
-    count = 0
-    result = []
-    for key, value in regions.items():
-        print(count)
-        section_image_id = key
-        image = cv2.imread(f"./Datasets/SectionImages/{section_image_id}.jpg")
-        height, width = image.shape[:2]
-
-        for section in value:
-            x_min, x_max = section[0][0][0], section[0][0][1]
-            y_min, y_max = section[0][1][0], section[0][1][1]
-            key = section[1]
-            gene = section[2]
-            if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
-                result.append((key, gene, None))
-            else:
-                # Extract the region of interest (ROI)
-                roi = image[y_min:y_max, x_min:x_max]
-
-                # Create a boolean mask of pixels where any channel is non-zero
-                expressed_mask = np.any(roi > 0, axis=2)
-
-                # Count the number of "expressed" pixels
-                expressed_count = np.count_nonzero(expressed_mask)
-
-                # Calculate density
-                gene_expression = expressed_count / DENSITY
-                result.append((key, gene, gene_expression))
-        count+=1
-    return result
 
 
 def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
@@ -698,6 +658,8 @@ def deserialize_voxels(file_num: int, start: int, stop: int) -> dict:
 def download_all_images(chunks: dict) -> None:
     """
     downloads all the images before calling get_expressions to speed up the process
+
+    deprecated
     """
     image_cache = {}
     for key, value in chunks.items():
@@ -719,42 +681,44 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
 
     if the point is in the bounds of the image and a density can be measured put it in
     """
+    chunk = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/P4_Complete_Chunk_{file_num}.csv")
+    dataframe = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv")
+    data = pd.read_csv("Datasets/Outputs/P4_Section_Data.csv")
+    #Section_Image,Seed_x,Seed_y
+    path = f"Datasets/Outputs/Fill_Negatives/new_dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
 
-    chunks = deserialize_voxels(file_num, start, stop)
-    download_all_images(chunks)
-    result = {}
-    for key, value in chunks.items():
-        for section in value:
-            section_image_id = int(section[1])
-            if section_image_id not in result:
-                result[section_image_id] = []
-            gene = section[0]
-            X = section[2]
-            Y = section[3]
-            x_min, x_max = X-25, X+25
-            y_min, y_max = Y-25, Y+25
-            result[section_image_id].append(( ((x_min, x_max),(y_min, y_max)), key, gene))
-    result = new_measure_density(result)
-    path = f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{file_num}.csv"
+    prev = None
+    image = None
+    for index in range(start, stop):
+        row = chunk.loc[index]
+        X = int(row["Seed_x"])
+        Y = int(row["Seed_y"])
+        x_min, x_max = X-25, X+25
+        y_min, y_max = Y-25, Y+25
+        image_id = int(row["Section_Image"])
+        
+        if prev != image_id:
+            binarized_image(image_id)
+            image = cv2.imread(f"./Datasets/SectionImages/{image_id}.jpg")
+            prev = image_id
+        
+        gene_expression = measure_density(x_min, x_max, y_min, y_max, image)
 
-    dataframe = pd.read_csv(path)
-
-    for expression in result:
-        X = expression[0][0]
-        Y = expression[0][1]
-        Z = expression[0][2]
-        gene = expression[1]
-        gene_expression = expression[2]
-
-        X_col = dataframe["X"] == X
-        Y_col = dataframe["Y"] == Y
-        Z_col = dataframe["Z"] == Z
-        coords = X_col & Y_col & Z_col
         if gene_expression is not None:
+            print(index)
+            section_id = data["Section_Dataset_Id"] == row["Section_Dataset"]
+            gene = str(data.loc[section_id, "Gene"].values[0])
+            # Voxel_x,Voxel_y,Voxel_z
+            X = float(row["Voxel_x"])
+            Y = float(row["Voxel_y"])
+            Z = float(row["Voxel_z"])
+
+            X_col = dataframe["X"] == X
+            Y_col = dataframe["Y"] == Y
+            Z_col = dataframe["Z"] == Z
+            coords = X_col & Y_col & Z_col
             dataframe.loc[coords, gene] = gene_expression
-
-    dataframe.to_csv(path, index=False)
-
+    
 
 def execute() -> None:
     """
@@ -808,16 +772,24 @@ def get_seed_voxels() -> None:
         #valid_boxes = get_valid_boxes()
         pass
 
-
 def temp_input(section_image: int, X: int, Y: int) -> None:
     X = int(X)
     Y = int(Y)
     x_min, x_max = X-25, X+25
     y_min, y_max = Y-25, Y+25
     binarized_image(section_image)
-
-
     print(measure_temp(x_min, x_max, y_min, y_max, section_image))
 
+def download_section_images(start: int, stop: int) -> None:
+    file = pd.read_csv("Datasets/Outputs/SectionImages.csv")
 
-#temp_input(100084380, 8067.632679197961, 5671.847921759916)
+    for index in range(start, stop):
+        binarized_image(file.loc[index].values[0])
+
+def benchmark() -> None:
+    start = time.time()
+    get_expressions(1, 0, 1000)
+    end = time.time()
+    print(f"{end-start} seconds")
+
+benchmark()

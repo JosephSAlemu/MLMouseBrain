@@ -718,7 +718,7 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
             Z_col = dataframe["Z"] == Z
             coords = X_col & Y_col & Z_col
             dataframe.loc[coords, gene] = gene_expression
-    
+    dataframe.to_csv(path, index=False)
 
 def execute() -> None:
     """

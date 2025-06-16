@@ -14,7 +14,7 @@ from matplotlib.patches import Rectangle
 from math import modf
 from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values)
 from validation import (is_valid_image, is_valid_p4_voxel_gene)
-from constants import DENSITY, P4_MOUSE_REFERENCE_ID
+from constants import DENSITY, P4_MOUSE_REFERENCE_ID, FILE_START, FILE_END
 from api import (image_to_reference, upload_file, directories, reference_to_image)
 import matplotlib.image as mpimg
 
@@ -712,12 +712,13 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
             X = float(row["Voxel_x"])
             Y = float(row["Voxel_y"])
             Z = float(row["Voxel_z"])
-
+            print(f"{(X,Y,Z)} = {gene_expression}")
             X_col = dataframe["X"] == X
             Y_col = dataframe["Y"] == Y
             Z_col = dataframe["Z"] == Z
             coords = X_col & Y_col & Z_col
             dataframe.loc[coords, gene] = gene_expression
+    
     dataframe.to_csv(path, index=False)
 
 def execute() -> None:
@@ -792,4 +793,6 @@ def benchmark() -> None:
     end = time.time()
     print(f"{end-start} seconds")
 
-benchmark()
+
+
+temp_input(101119844, 5686.262045194233, 4281.057977385401)

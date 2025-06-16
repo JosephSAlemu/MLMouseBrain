@@ -1,6 +1,6 @@
 import pandas as pd
 
-
+# Create File Structure for user.
 def load():
     #merge_genes_annotations()
     #get_unique_structures()

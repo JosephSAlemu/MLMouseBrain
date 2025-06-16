@@ -572,7 +572,7 @@ def merge_data_frames() -> None:
 
     To do: just make all negative expressions NaN.
     """
-    dir_path = "Datasets/Outputs/Fill_Negatives/dataframes"
+    dir_path = "Datasets/Outputs/Fill_Negatives/new_dataframes"
     directory = sorted(os.listdir(dir_path))
     prev = None
 
@@ -643,4 +643,12 @@ def bin_expression_values() -> None:
                 values.append(cell)
 
     return (bins, values)
+
+
+def compare_files() -> None:
+    for dir_num in range(FILE_START, FILE_END):
+        dataframe = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/dataframes/P4_50_NewDenS_Laptop{dir_num}.csv")
+        new_dataframe = pd.read_csv(f"Datasets/Outputs/Fill_Negatives/new_dataframes/P4_50_NewDenS_Laptop{dir_num}.csv")
+        print(dir_num)
+        print(dataframe.compare(new_dataframe))
 

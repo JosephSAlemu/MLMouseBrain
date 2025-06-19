@@ -7,7 +7,7 @@ import paramiko
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
-from filter import group_data, split_section_ids
+from utils.filter import group_data, split_section_ids
 from constants import (
     SIZE,
     HEADERS,
@@ -16,7 +16,7 @@ from constants import (
     CHUNK_HEADERS,
     CHUNK_HEADERS_V2,
 )
-from validation import is_valid_voxel, is_valid_chunk
+from utils.validation import is_valid_voxel, is_valid_chunk
 
 
 # for retrying requests

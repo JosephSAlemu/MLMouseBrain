@@ -1,5 +1,7 @@
+import constants
 from query import QueryBuilder
-from enums import Action
+from enums.Actions import Action
+
 
 class Api():
     def __init__(self, file: str = None):
@@ -8,7 +10,7 @@ class Api():
     def download_section_images(self) -> None:
         Builder = QueryBuilder()
         Builder.section_image()
-        print(Builder.query.format(19934, 23842))
+        print(Builder.query.format(image = ))
 
     def reference_to_image(
         X: int,

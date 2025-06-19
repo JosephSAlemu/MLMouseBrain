@@ -12,10 +12,10 @@ import paramiko
 from typing import Type
 from matplotlib.patches import Rectangle
 from math import modf
-from filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values)
-from validation import (is_valid_image, is_valid_p4_voxel_gene)
+from utils.filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values, missing_and_empty_distributions)
+from utils.validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID, FILE_START, FILE_END
-from api import (image_to_reference, upload_file, directories, reference_to_image)
+from api.api import (image_to_reference, upload_file, directories, reference_to_image)
 import matplotlib.image as mpimg
 
 
@@ -166,14 +166,17 @@ def histogram() -> None:
     """
     bin_edges, values = bin_expression_values()
 
-
-    # Define labels
-    labels = ['(0, .001]', '(.001, .01]', '(.01, .1]', '(.1, 1]']
-
     # Split zeros
     zero_mask = pd.Series(values) == 0
     zero_count = zero_mask.sum()
+
+    # Split negative ones
+    missing_mask = pd.Series(values) == -1
+    missing_count = missing_mask.sum()
+
+    # Exclude 0 and negative 1
     nonzero_values = pd.Series(values)[~zero_mask]
+    nonzero_values = pd.Series(values)[~missing_mask]
 
     # Bin non-zero values
     binned = pd.cut(nonzero_values, bins=bin_edges, right=True)
@@ -181,8 +184,10 @@ def histogram() -> None:
     # Count binned values
     counts = binned.value_counts(sort=False)
 
-    # Add the zero bin manually
+    # Add the zero and missing expression bin manually
     counts = pd.Series([zero_count], index=['0'])._append(counts)
+    counts = pd.Series([missing_count], index=['-1'])._append(counts)
+
 
     print(counts)
     # Plot
@@ -193,6 +198,21 @@ def histogram() -> None:
     plt.title("Custom Binning Histogram")
     plt.show()
 
+def histogram_negative_distribution():
+    """
+    generate a histogram of # of voxels with 0-10% 0/-1s, 10-20% 0/-1s, 20-30% 0/-1s
+    """
+    bin_edges, values = missing_and_empty_distributions()
+    missing_zero_values = pd.Series(values)
+
+    binned = pd.cut(missing_zero_values, bins=bin_edges, right=True)
+    counts = binned.value_counts(sort=False)
+    print(counts)
+    plt.bar(counts.index.astype(str), counts.values)
+    plt.xlabel("Bins")
+    plt.ylabel("Frequency")
+    plt.title("0 or -1 expressions")
+    plt.show()
 
 def get_valid_boxes(section_image_id: str, func: int) -> list[tuple,tuple]:
     '''
@@ -794,5 +814,4 @@ def benchmark() -> None:
     print(f"{end-start} seconds")
 
 
-
-temp_input(101119844, 5686.262045194233, 4281.057977385401)
+#temp_input(101119844, 5686.262045194233, 4281.057977385401)

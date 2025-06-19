@@ -5,8 +5,9 @@ import csv
 import requests
 import paramiko
 import ast
-from validation import (is_valid_voxel, is_valid_dataframe)
-from constants import (HEADERS, DISTRIBUTED, GET_IMAGE_IDS, GET_SEED_PIXELS, FILE_START, FILE_END)
+from utils.validation import (is_valid_voxel, is_valid_dataframe)
+from constants import (HEADERS, DISTRIBUTED, FILE_START, FILE_END)
+from enums.Actions import Action
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -620,28 +621,45 @@ def merge_chunks() -> None:
     result_df.to_csv("Datasets/Outputs/Fill_Negatives/P4_Complete_Chunk_error.csv", index=False)
 
 
-def bin_expression_values() -> None:
+def bin_expression_values() -> tuple[list, list]:
     """
     Bins expression values into the following by index
-    bins[0] = [0]
-    bins[1] = (0, .001]
-    bins[2] = (.001, .01]
-    bins[3] = (.01, .1]
+    bins[0] = [-1]
+    bins[1] = [0]
+    bins[2] = (0, .001]
+    bins[3] = (.001, .01]
+    bins[4] = (.01, .1]
     bins[4] = (.1, 1]
 
     returns an array of all the bins
     """
     bins = [0, .001, .01, .1, 1]
     values = []
-    df = pd.read_csv("Datasets/Outputs/P4_50_NewDenS.csv")
+    df = pd.read_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv")
     for _, row in df.iterrows():
         #    Skip X,Y, and Z
         # drop the columns x,y,z cause they could be in any order
         n_row = row[3:]
         for cell in n_row:
-            if cell != -1:
-                values.append(cell)
+            values.append(cell)
 
+    return (bins, values)
+
+def missing_and_empty_distributions() -> tuple[list, list]:
+    """
+    Gives us the percentage of missing or zero gene expressions per voxel
+    """
+    bins = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
+    values = []
+    df = pd.read_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv")
+    for _, row in df.iterrows():
+        count = 0
+        #   Skip X,Y, and Z
+        n_row = row[3:]
+        for cell in n_row:
+            if cell == 0 or cell == -1:
+                count+=1        
+        values.append(count/(len(row)-3))
     return (bins, values)
 
 

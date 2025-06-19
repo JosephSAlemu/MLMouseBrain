@@ -1,0 +1,10 @@
+- All function comments must be done with single quote marks 
+(ex: '''
+     does <blank>
+     ''')
+
+- All strings must have double quotations
+
+- Two spaces before and after each function
+
+- 

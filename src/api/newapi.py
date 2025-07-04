@@ -1,6 +1,7 @@
-import constants
+import requests
+from constants import P4_MOUSE_REFERENCE_ID
 from query import QueryBuilder
-from enums.Actions import Action
+from enums.actions import Action
 
 
 class Api():

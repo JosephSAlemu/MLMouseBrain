@@ -21,3 +21,7 @@ class Action(Enum):
     SECTION_IMAGE = auto()
 
     BINARIZED_SECTION_IMAGE = auto()
+
+    VOXELS = auto()
+
+    GENES = auto()

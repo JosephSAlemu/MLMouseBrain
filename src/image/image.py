@@ -9,15 +9,15 @@ import time
 import ast
 import os
 import paramiko
+import matplotlib.image as mpimg
 from typing import Type
 from matplotlib.patches import Rectangle
 from math import modf
-from utils.filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values, missing_and_empty_distributions)
+from utils.filter import (get_all_chunks, group_data, get_section_dataset_ids, read_chunk_files, create_sub_voxel_dataframe, bin_expression_values, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes)
 from utils.validation import (is_valid_image, is_valid_p4_voxel_gene)
 from constants import DENSITY, P4_MOUSE_REFERENCE_ID, FILE_START, FILE_END
 from api.api import (image_to_reference, upload_file, directories, reference_to_image)
-import matplotlib.image as mpimg
-
+from enums.actions import Action
 
 """p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
@@ -198,14 +198,19 @@ def histogram() -> None:
     plt.title("Custom Binning Histogram")
     plt.show()
 
-def histogram_negative_distribution():
+def histogram_negative_distribution(type: Action, inclusive: bool):
     """
     generate a histogram of # of voxels with 0-10% 0/-1s, 10-20% 0/-1s, 20-30% 0/-1s
     """
-    bin_edges, values = missing_and_empty_distributions()
-    missing_zero_values = pd.Series(values)
+    match type:
+        case Action.VOXELS:
+            bin_edges, values = missing_and_empty_distributions_voxels()
 
-    binned = pd.cut(missing_zero_values, bins=bin_edges, right=True)
+        case Action.GENES:
+            bin_edges, values = missing_and_empty_distributions_genes()
+
+    missing_zero_values = pd.Series(values)
+    binned = pd.cut(missing_zero_values, bins=bin_edges, right=inclusive)
     counts = binned.value_counts(sort=False)
     print(counts)
     plt.bar(counts.index.astype(str), counts.values)
@@ -740,6 +745,7 @@ def get_expressions(file_num: int, start: int, stop: int) -> dict:
             dataframe.loc[coords, gene] = gene_expression
     
     dataframe.to_csv(path, index=False)
+
 
 def execute() -> None:
     """

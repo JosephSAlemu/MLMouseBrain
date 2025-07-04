@@ -6,5 +6,3 @@
 - All strings must have double quotations
 
 - Two spaces before and after each function
-
-- 

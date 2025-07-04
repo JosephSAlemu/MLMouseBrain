@@ -7,7 +7,7 @@ import paramiko
 import ast
 from utils.validation import (is_valid_voxel, is_valid_dataframe)
 from constants import (HEADERS, DISTRIBUTED, FILE_START, FILE_END)
-from enums.Actions import Action
+from enums.actions import Action
 from statistics import stdev
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
@@ -645,13 +645,16 @@ def bin_expression_values() -> tuple[list, list]:
 
     return (bins, values)
 
-def missing_and_empty_distributions() -> tuple[list, list]:
+def missing_and_empty_distributions_voxels() -> tuple[list, list]:
     """
     Gives us the percentage of missing or zero gene expressions per voxel
     """
     bins = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
     values = []
+
     df = pd.read_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv")
+    length = len(df.loc[0])-3
+
     for _, row in df.iterrows():
         count = 0
         #   Skip X,Y, and Z
@@ -659,8 +662,28 @@ def missing_and_empty_distributions() -> tuple[list, list]:
         for cell in n_row:
             if cell == 0 or cell == -1:
                 count+=1        
-        values.append(count/(len(row)-3))
+        values.append(count/length)
     return (bins, values)
+
+
+def missing_and_empty_distributions_genes() -> tuple[list, list]:
+    """
+    Gives us the percentage of missing or zero gene expressions per gene
+    """
+    bins = [0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1]
+    values = []
+
+    df = pd.read_csv("Datasets/Outputs/P4_50_RE_NewDenS.csv")
+    length = len(df)
+
+    for gene in df:
+        count = 0
+        for cell in df[gene]:
+            if cell == 0 or cell == -1:
+                count+=1
+        values.append(count/length)
+    return (bins, values)
+
 
 
 def compare_files() -> None:

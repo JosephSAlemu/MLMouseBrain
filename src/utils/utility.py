@@ -1,12 +1,12 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from enums.inequality import Inequality
 from enums.dimensions import Dimensions
 from constants import HEADERS
 from collections.abc import Callable
 from collections import Counter, defaultdict
-import matplotlib.pyplot as plt
-
+from scipy.stats import zscore
 
 class Utility():
     '''
@@ -143,18 +143,20 @@ class Utility():
             plt.pause(0.1)
         plt.show()
 
-    def z_score_normalize(self, func: Callable[[str], dict], parameter: str) -> None:
+    def z_score_normalize(self, col: str, new_path: str) -> None:
         '''
-        Applies and then creates a new dataframe with normalized values for k-means clustering.
-        
-        Meant to solve the issue with separate clusters.
-        '''
-        my_dict = func(parameter)
-        for key, values in my_dict.items():
-            data = np.array(values)
-            mean = np.mean(data)
-            std_dev = np.std(data)
-            z_scores = (data - mean) / std_dev
-            print(f"mean for {parameter} value {key} is {mean}")
+        Applies z-score normalization on each z coordinate, grouping each voxel by their z coordinate for the normalization.
 
+        This is to prevent seperate slices on the z axis when performing k-means clustering
+        '''
+        df = pd.read_csv(self.file)
+        cols = list(df.columns)
+        for coord in HEADERS:
+            cols.remove(coord)
+        values = list(set(df[col].astype(float)))
+        
+        for value in values:
+            df.loc[df["Z"] == value, cols] = zscore(df.loc[df["Z"] == value, cols], nan_policy="omit")
+        df.to_csv(new_path, index=False)
+        #df[parameter] = np.where
 

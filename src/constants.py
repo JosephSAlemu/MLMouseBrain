@@ -2,6 +2,10 @@ SIZE = 1464
 
 HEADERS = ["X","Y","Z"]
 
+HEADERS_V2 = ["structure_id","structure_acronym","structure_name","voxRowNum","X","Y","Z"]
+
+HEADERS_V3 = ["structure_id","structure_acronym","structure_name","voxRowNum"]
+
 FILE_START = 1
 
 FILE_END = 9

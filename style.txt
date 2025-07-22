@@ -3,6 +3,10 @@
      does <blank>
      ''')
 
-- All strings must have double quotations
+- All strings must have double quotations.
 
-- Two spaces before and after each function
+- No hardcoded paths. Must either be a parameter for a field for a class.
+
+- One space between before and after each function.
+
+- Type hints in the signature of all functions.

@@ -1,34 +1,41 @@
 import requests
-from constants import P4_MOUSE_REFERENCE_ID
-from query import QueryBuilder
-from enums.actions import Action
+from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID
+from src.query import QueryBuilder
+from src.enums.actions import Action
+from scripts.script import split_section_ids
 
 
 class Api():
     def __init__(self, file: str = None):
         self.file = file
+        self.query = None
     
     def download_section_images(self) -> None:
-        Builder = QueryBuilder()
-        Builder.section_image()
-        print(Builder.query.format(image = ))
+        pass
 
     def reference_to_image(
+        self,
+        mouse: int,
         X: int,
         Y: int,
         Z: int,
-        mouse: int,
         section_ids: list,
         counter: int,
         file_num: int,
         gene: str = None,
     ) -> None:
+        #use this as the new query
+        query = QueryBuilder()
+        self.query = query.reference_to_image()
+
         section_id_chunks = split_section_ids(section_ids)
         if mouse == P56_MOUSE_REFERENCE_ID:
 
+            self.query = self.query.format(reference_id = P56_MOUSE_REFERENCE_ID)
+
             # Have a line where you convert this to microns
-            X, Y, Z = float(X), float(Y), float(Z)
-            X, Y, Z = X * 200, Y * 200, Z * 200
+            m_X, m_Y, m_Z = float(X) * 200, float(Y) * 200 , float(Z) * 200
+
             image_ids = []
             if is_valid_chunk("Chunked", counter):
                 created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{counter}.csv"
@@ -92,8 +99,40 @@ class Api():
                         else:
                             print(f"ISSUE WITH QUERY {url}")
     
+    def image_to_reference(
+    self,
+    mouse: int,
+    section_image_id: int, 
+    X: int, 
+    Y: int,
+    
+    ) -> tuple | None:
+        '''
+        takes in the section image for a gene and the centroid coordinates for the bin in that section image
+
+        divides all the coordinates by 160 to get the reference space coordinates
+
+        returns the result of that query as tuple of the voxel coordinates
+        '''
+        query = QueryBuilder()
+        self.query = query.image_to_reference()
+
+        match mouse:
+            case _:
+                pass
 
 
-if __name__ == "__main__":
-    ob = Api()
-    ob.download_section_images()
+        try:
+            response = session.get(url)
+            response.raise_for_status()
+            data = f"{response.json()}"
+            data = data.replace("'", '"')
+            data = data.replace("True", "true")
+            data = json.loads(data)
+            voxel = data["msg"]["image_to_reference"]
+            x, y, z = voxel["x"] / 160, voxel["y"] / 160, voxel["z"] / 160
+            # print(f"after division: x = {x} y = {y},z = {z}")
+            return (x, y, z)
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+            return None

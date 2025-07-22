@@ -9,15 +9,13 @@ class QueryBuilder():
     @reset_query
     def section_image(self) -> None:
         self.query += "/image_download/{image_id}"
-
-    @reset_query 
+        
+    @reset_query
     def binarized_section_image(self) -> None:
-        self.section_image()
         self.query += "?view=expression"
     
     @reset_query
     def reference_to_image(self) -> None:
-        self.reset_query()
         self.query += "/reference_to_image/{reference_id}.json?x={X}&y={Y}&z={Z}&section_data_set_ids={image_ids}"
     
     @reset_query

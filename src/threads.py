@@ -1,5 +1,5 @@
 from threading import Thread
-from image.image import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
+from image.oldimage import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
 from utils.filter import (partition_section_images)
 from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME, FILE_START, FILE_END, REANALYSIS)
 import pandas as pd

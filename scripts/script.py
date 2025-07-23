@@ -1,5 +1,7 @@
 import pandas as pd
 
+from src.constants import HEADERS
+
 def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
     """
     Split array of section id's into a 2d array of sections of 100 for AMBA queries
@@ -31,8 +33,17 @@ def strip_experiments(path: str, new_path: str) -> None:
     print(df.columns)
     df.to_csv(new_path, index=False)
 
-def find_common_voxels(path: str, other_path: str, ignore: list[str], ignore_other: list[str]) -> None:
-    df = pd.read_csv(path)
-    other_df = pd.read_csv(other_path)
+def count_missing_expressions(self, missing: str) -> None:
+    '''
+    Counts missing expressions
+    '''
+    df = pd.read_csv(self.file)
+    print(df.drop(columns=HEADERS))
 
-    df
+    match missing:
+        case "na":
+            print(df.isna().sum().sum())
+        case "-1":
+            pass
+        case _:
+            pass

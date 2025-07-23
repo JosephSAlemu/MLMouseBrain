@@ -8,9 +8,13 @@ from src.enums.actions import Action
 from src.enums.dimensions import Dimensions
 from src.analysis.kmeans import Kmeans
 from src.api.newapi import Api
+from src.utils.visualize import Visualize
+
+import pandas as pd
+
 
 if __name__ == "__main__":
-    util = Utility()
+    #util = Utility()
     #util.filter_column("idk", None, Inequality.LESS_THAN)
     #histogram_negative_distribution(Action.GENES, False)
     #util = Utility("Datasets/Outputs/P4_Brainstem_15.csv")
@@ -37,8 +41,13 @@ if __name__ == "__main__":
     #util = Utility("Datasets/Outputs/p4_NewDenS.csv")
     #util.filter_genes(.15, Inequality.LESS_THAN, "Datasets/Outputs/P4_Brainstem_15.csv")
 
-    strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
-    #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
+    #strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
+    #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
 
+    #util.get_common_voxels("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_match.csv")
+
+    visual = Visualize("Datasets/Outputs/p4_match.csv")
+    visual.histogram([0, .001, .01, .1, 1, 2], "log", "Expression Range", "Frequency", "Ranges between gene expression values")
+    #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
     
 

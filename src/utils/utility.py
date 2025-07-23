@@ -110,19 +110,7 @@ class Utility():
         else:
             raise ValueError(f"invalid coordinate: {coordinate}")
     
-    def plot(self, func: Callable[[str], dict], parameter: str) -> None:
-        my_dict = func(parameter)
 
-        for key, values in my_dict.items():
-            _, _ = plt.subplots()
-            plt.hist(values, bins="auto")
-            plt.xlabel(f"gene_expressions")
-            plt.yscale("log")
-            plt.ylabel("Frequency")
-            plt.title(f"{parameter} value of {key}")
-            plt.show(block=False)
-            plt.pause(0.1)
-        plt.show()
 
     def z_score_normalize(self, col: str, new_path: str, ignore: list[str]) -> None:
         '''
@@ -178,13 +166,13 @@ class Utility():
         cols = pd.Index(["X", "Y", "Z"]).append(gene_cols)
         df[cols].to_csv(new_path, index=False)
 
-    def k_means_result(self, cluster_path:str, new_path: str, headers: list[str]) -> None:
+    def k_means_result(self, other_path:str, new_path: str, headers: list[str]) -> None:
         '''
         Concats results from K-means clustering
         '''
         
         df = pd.read_csv(self.file)
-        other_df = pd.read_csv(cluster_path)
+        other_df = pd.read_csv(other_path)
         print(df[headers])
         print(other_df.iloc[:, 1:])
         merged_df = pd.concat([df[headers], other_df.iloc[:, 1:]], axis=1)
@@ -197,19 +185,28 @@ class Utility():
         
         pass
 
-    def count_missing_expressions(self, missing: str) -> None:
-        '''
-        Counts missing expressions
-        '''
+    def get_common_voxels(self, other_path: str, new_path: str) -> None:
         df = pd.read_csv(self.file)
-        print(df.drop(columns=HEADERS))
-
-        match missing:
-            case "na":
-                print(df.isna().sum().sum())
-            case "-1":
-                pass
-            case _:
-                pass
-    
+        other_df = pd.read_csv(other_path)
         
+        df[HEADERS] = df[HEADERS].astype(float)
+        other_df[HEADERS] = other_df[HEADERS].astype(float)
+        missing = df.columns.difference(other_df.columns)
+        genes = df.columns.difference(missing.append(pd.Index(HEADERS)))
+
+
+        print(genes)
+        df.drop(columns=missing, inplace=True)
+
+        match = pd.DataFrame()
+        match = df.merge(other_df, how = 'inner', left_on=["X", "Y", "Z"], right_on=["X", "Y", "Z"])
+        match_v = match.copy()
+        match = match[HEADERS]
+
+        print(match)
+        for gene in genes:
+            x = f"{gene}_x"
+            y = f"{gene}_y"
+            match[gene] = (match_v[x] - match_v[y]).abs()
+
+        match.to_csv(new_path, index=False )

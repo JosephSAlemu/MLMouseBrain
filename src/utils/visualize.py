@@ -1,7 +1,6 @@
-from collections.abc import Callable
 import matplotlib.pyplot as plt
 import pandas as pd
-
+from collections.abc import Callable
 from src.constants import HEADERS
 
 class Visualize():
@@ -26,7 +25,7 @@ class Visualize():
             plt.pause(0.1)
         plt.show()
     
-    def histogram(self, bins: list[int], scale: str, x_name: str, y_name: str, title: str) -> None:
+    def histogram(self, scale: str, x_name: str, y_name: str, title: str, bins: list[int] = None, e_bins: bool = False, right: bool = False) -> None:
         counts = self.bin_expression_values(bins)
         print(counts)
         plt.bar(counts.index.astype(str), counts.values)
@@ -36,24 +35,26 @@ class Visualize():
         plt.title(title)
         plt.show()
 
-    def bin_expression_values(self, bins: list[int] = None) -> pd.Series:
+    def bin_expression_values(self, bins: list[int] = None, e_bins: bool = False, right: bool = False) -> pd.Series:
         """
         Bins expression values by custom bins or the following by default.
 
-        bins[0] = [-1]
-        bins[1] = [0]
-        bins[2] = (0, .001]
-        bins[3] = (.001, .01]
-        bins[4] = (.01, .1]
-        bins[4] = (.1, 1]
+        bins[0] = (0, .001]
+        bins[1] = (.001, .01]
+        bins[2] = (.01, .1]
+        bins[3] = (.1, 1]
+
+        e_bins are for adding missing and invalid gene expression bins.
 
         returns the binned values
         """
         if bins == None:
             bins = [0, .001, .01, .1, 1]
-
+        
         values = []
+
         df = pd.read_csv(self.file)
+
         df = df[df.columns.difference(HEADERS)]
         print(df)
 
@@ -61,9 +62,25 @@ class Visualize():
 
             for cell in row:
                 values.append(cell)
+        
+        if e_bins == True:
+            values = pd.Series(values)
+            zero_mask = values == 0
+            zero_count = zero_mask.sum()
+            #nonzero_values = pd.Series(values)[~zero_mask]
 
-        binned = pd.cut(values, bins=bins, right=True)
+            neg_mask = values == -1
+            neg_count = neg_mask.sum()
+            #nonneg_values = pd.Series(values)[~neg_mask]
+
+            values = values[~neg_mask][~zero_mask]
+
+        binned = pd.cut(values, bins=bins, right=right)
 
         counts = binned.value_counts()
+
+        counts = pd.Series([zero_count], index=['0'])._append(counts)
+        counts = pd.Series([neg_count], index=['-1'])._append(counts)
+
 
         return counts

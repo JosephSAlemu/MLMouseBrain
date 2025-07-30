@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
-from sklearn.impute import KNNImputer
+from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.model_selection import train_test_split
 from collections.abc import Callable
 from collections import Counter, defaultdict
@@ -110,8 +110,6 @@ class Utility():
         else:
             raise ValueError(f"invalid coordinate: {coordinate}")
     
-
-
     def z_score_normalize(self, col: str, new_path: str, ignore: list[str]) -> None:
         '''
         Applies z-score normalization on each z coordinate, grouping each voxel by their z coordinate for the normalization.
@@ -141,22 +139,23 @@ class Utility():
 
         df.to_csv(new_path, index=False)
 
-    def knn_imputation(self, new_path: str, ignore: list[str]) -> None:
+    def impute(self, method: str,  new_path: str, ignore: list[str]) -> None:
         '''
-        Apply knn_imputation
-        
-        finds the best value of k for KNN imputation
+        Applies SimpleImputer transform and 
         '''
         df = pd.read_csv(self.file)
-        new_df = df.copy()
-        gene_cols = new_df.columns.difference(ignore)
-        print(new_df[gene_cols])
-        imputer = KNNImputer(n_neighbors=2)
-        new_df[gene_cols] = imputer.fit_transform(new_df[gene_cols])
-        print(new_df.isna().sum().sum())
+        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+        df = pd.DataFrame(imp.fit_transform(method))
+        df.to_csv(new_path, index=False)
 
-        new_df.to_csv(new_path, index=False)
-
+    def knn_impute(self, n: int, new_path: str, ignore: list[str]) -> None:
+        df = pd.read_csv(self.file)
+        gene_cols = df.columns.difference(ignore)
+        print(df[gene_cols])
+        imputer = KNNImputer(n_neighbors=n)
+        df[gene_cols] = imputer.fit_transform(df[gene_cols])
+        df.to_csv(new_path, index=False)
+    
     def k_means_prep(self, new_path:str, ignore: list[str]) -> None:
         '''
         Prepares file for K-means clustering configurations set.
@@ -168,6 +167,8 @@ class Utility():
 
     def k_means_result(self, other_path:str, new_path: str, headers: list[str]) -> None:
         '''
+        After performing K-means, concats the Structure information (ID, name, acronym) with the data
+
         Concats results from K-means clustering
         '''
         
@@ -186,6 +187,11 @@ class Utility():
         pass
 
     def get_common_voxels(self, other_path: str, new_path: str) -> None:
+        '''
+        Finds the common voxels from dataframes (Voxels x Genes)
+
+        Must have X,Y,Z
+        '''
         df = pd.read_csv(self.file)
         other_df = pd.read_csv(other_path)
         

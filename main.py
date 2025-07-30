@@ -46,8 +46,8 @@ if __name__ == "__main__":
 
     #util.get_common_voxels("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_match.csv")
 
-    visual = Visualize("Datasets/Outputs/p4_match.csv")
-    visual.histogram("log", "Expression Range", "Frequency", "Ranges between gene expression values", e_bins= True)
+    visual = Visualize("Datasets/Outputs/P4_50_NewDenS.csv")
+    visual.histogram("log", "Expression Range", "Frequency", "Ranges between gene expression values", e_bins= True, right=True)
     #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
     
 

@@ -26,7 +26,7 @@ class Visualize():
         plt.show()
     
     def histogram(self, scale: str, x_name: str, y_name: str, title: str, bins: list[int] = None, e_bins: bool = False, right: bool = False) -> None:
-        counts = self.bin_expression_values(bins)
+        counts = self.bin_expression_values(bins, e_bins, right)
         print(counts)
         plt.bar(counts.index.astype(str), counts.values)
         plt.yscale(scale)
@@ -49,7 +49,7 @@ class Visualize():
         returns the binned values
         """
         if bins == None:
-            bins = [0, .001, .01, .1, 1]
+            bins = [0.0, .001, .01, .1, 1]
         
         values = []
 
@@ -62,25 +62,30 @@ class Visualize():
 
             for cell in row:
                 values.append(cell)
-        
+
+        split = {}
+
         if e_bins == True:
             values = pd.Series(values)
+
             zero_mask = values == 0
             zero_count = zero_mask.sum()
-            #nonzero_values = pd.Series(values)[~zero_mask]
+            split[zero_count] = "0"
+
+            print(zero_count)
 
             neg_mask = values == -1
             neg_count = neg_mask.sum()
-            #nonneg_values = pd.Series(values)[~neg_mask]
+            split[neg_count] = "-1"
 
             values = values[~neg_mask][~zero_mask]
+            print("working")
 
         binned = pd.cut(values, bins=bins, right=right)
 
-        counts = binned.value_counts()
-
-        counts = pd.Series([zero_count], index=['0'])._append(counts)
-        counts = pd.Series([neg_count], index=['-1'])._append(counts)
+        counts = binned.value_counts(sort=False)
+        for key, value in split.items():
+            counts = pd.Series([key], index=[value])._append(counts)
 
 
         return counts

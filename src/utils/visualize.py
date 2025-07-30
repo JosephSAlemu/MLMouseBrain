@@ -56,7 +56,6 @@ class Visualize():
         df = pd.read_csv(self.file)
 
         df = df[df.columns.difference(HEADERS)]
-        print(df)
 
         for _, row in df.iterrows():
 
@@ -72,14 +71,12 @@ class Visualize():
             zero_count = zero_mask.sum()
             split[zero_count] = "0"
 
-            print(zero_count)
 
             neg_mask = values == -1
-            neg_count = neg_mask.sum()
+            neg_count = neg_mask.sum() + df.isna().sum().sum()
             split[neg_count] = "-1"
 
             values = values[~neg_mask][~zero_mask]
-            print("working")
 
         binned = pd.cut(values, bins=bins, right=right)
 

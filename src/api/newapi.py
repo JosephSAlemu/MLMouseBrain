@@ -22,7 +22,7 @@ class Api():
         section_ids: list,
         counter: int,
         file_num: int,
-        gene: str = None,
+        gene: str = None, # type: ignore
     ) -> None:
         #use this as the new query
         query = QueryBuilder()

@@ -139,12 +139,12 @@ class Utility():
 
         df.to_csv(new_path, index=False)
 
-    def impute(self, method: str,  new_path: str, ignore: list[str]) -> None:
+    def impute(self, method: str,  new_path: str) -> None:
         '''
         Applies SimpleImputer transform and 
         '''
         df = pd.read_csv(self.file)
-        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+        imp = SimpleImputer(missing_values=np.nan, strategy= method)
         df = pd.DataFrame(imp.fit_transform(method))
         df.to_csv(new_path, index=False)
 

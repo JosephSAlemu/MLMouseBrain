@@ -38,16 +38,16 @@ if __name__ == "__main__":
     #histogram_negative_distribution(Action.GENES, False, "Datasets/Outputs/P4_Brainstem_15.csv")
     #drop_rows()
     
-    #util = Utility("Datasets/Outputs/p4_NewDenS.csv")
-    #util.filter_genes(.15, Inequality.LESS_THAN, "Datasets/Outputs/P4_Brainstem_15.csv")
+    util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
+    util.impute("mean", "Datasets/Outputs/P4_50_IM_NewDenS.csv")
 
     #strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
     #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
 
     #util.get_common_voxels("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_match.csv")
 
-    visual = Visualize("Datasets/Outputs/P4_50_RE_90_NewDenS.csv")
-    visual.histogram("log", "Expression Range", "Frequency", "Distribution of Voxel Gene Expressions", e_bins= True, right=True)
+    #visual = Visualize("Datasets/Outputs/P4_50_RE_90_NewDenS.csv")
+    #visual.histogram("log", "Expression Range", "Frequency", "Distribution of Voxel Gene Expressions", e_bins= True, right=True)
     #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
     
 

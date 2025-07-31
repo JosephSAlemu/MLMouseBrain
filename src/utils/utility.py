@@ -145,7 +145,7 @@ class Utility():
         '''
         df = pd.read_csv(self.file)
         imp = SimpleImputer(missing_values=np.nan, strategy= method)
-        df = pd.DataFrame(imp.fit_transform(method))
+        df = pd.DataFrame(imp.fit_transform(df))
         df.to_csv(new_path, index=False)
 
     def knn_impute(self, n: int, new_path: str, ignore: list[str]) -> None:

@@ -8,8 +8,9 @@ class Visualize():
     The purpose of this class is to be used for visualizing data (bar plots, histograms, pie charts, etc. )
     
     '''
-    def __init__(self, file: str = None):
+    def __init__(self, file: str = None, ignore: list[str] = None):
         self.file = file
+        self.ignore = ignore
 
     def plot(self, func: Callable[[str], dict], parameter: str) -> None:
         my_dict = func(parameter)
@@ -55,7 +56,7 @@ class Visualize():
 
         df = pd.read_csv(self.file)
 
-        df = df[df.columns.difference(HEADERS)]
+        df = df[df.columns.difference(self.ignore)]
 
         for _, row in df.iterrows():
 

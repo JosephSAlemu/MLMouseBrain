@@ -44,15 +44,35 @@ def retrieve_gene_from_section_id(section_dataset_id: int) -> str:
     '''
     takes in a section dataset id and returns the corresponding gene acronym for that id
     '''
-    url = rf"https://developingmouse.brain-map.org/api/v2/data/query.json?criteria=model::Structure,rma::criteria,structure_sets%5Bid$eq22%5D,pipe::list%5Bxstructures$eq%27id%27%5D,model::SectionDataSet%5Bid$eq{section_dataset_id}%5D,rma::include,genes"
+    url = f"https://developingmouse.brain-map.org/api/v2/data/query.json?criteria=model::Structure,rma::criteria,structure_sets%5Bid$eq22%5D,pipe::list%5Bxstructures$eq%27id%27%5D,model::SectionDataSet%5Bid$eq{section_dataset_id}%5D,rma::include,genes"
     response = requests.get(url)
     if response.status_code == 200:
         #Note to self: if you want to access data in nested json, put 0 as the index after the first unwrap.
         data = f"{response.json()['msg'][0]['genes'][0]['acronym']}"
+        print(data)
 
         return data        
     else:
         print(f"ISSUE WITH QUERY {url}")
+
+def retrieve_section_id_from_gene(path: str, gene: str) -> int:
+    '''
+    given a path to a list of section id's you have and a gene name
+
+    returns the section id from the gene name.
+    '''
+    url = f"http://api.brain-map.org/api/v2/data/SectionDataSet/query.json?criteria=[failed$eqfalse],products[id$eq3],genes[acronym$eq{gene}]&include=section_images"
+    response = requests.get(url)
+    if response.status_code == 200:
+        temp = []
+        for section_image in response.json()['msg']:
+            temp.append(section_image['section_images'][0]['data_set_id'])
+
+        with open(path) as file:
+            for i in file:
+                id = int(i)
+                if id in temp:
+                    print(id)
 
 
 def group_data(voxel: int) -> list[dict]:
@@ -672,3 +692,4 @@ def drop_rows() -> None:
     df = pd.read_csv("Datasets/Outputs/P4_Brainstem_15.csv")
     df = df.drop(columns=["structure_id","structure_acronym","structure_name","voxRowNum"])
     df.to_csv("Datasets/Outputs/P4_Brainstem_15_D.csv", index=False)
+

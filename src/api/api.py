@@ -7,6 +7,8 @@ import paramiko
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from dotenv import load_dotenv, dotenv_values
+from src.query import QueryBuilder
+from scripts.script import split_section_ids
 from src.utils.filter import group_data
 from src.constants import (
     SIZE,
@@ -191,6 +193,34 @@ def reference_to_image(
                         print(f"ISSUE WITH QUERY {url}")
 
 
+def test_reference_to_image(
+    X: int,
+    Y: int,
+    Z: int,
+    mouse: int,
+    section_ids: list
+) -> None:
+    if mouse == P4_MOUSE_REFERENCE_ID:
+        query = QueryBuilder()
+        query = query.reference_to_image()
+
+        section_id_chunks = split_section_ids(section_ids)
+
+        if mouse == P56_MOUSE_REFERENCE_ID:
+            m_X, m_Y, m_Z  = ccf_to_microns(P56_MOUSE_REFERENCE_ID, x=X, y=Y, z=Z)
+
+            query = self.format(reference_id= P56_MOUSE_REFERENCE_ID, X= m_X, Y= m_Y, Z= m_Z)
+
+            print(query)
+
+            """for image_ids in section_id_chunks:
+                        query = query
+                        query.format(section_data_set_ids= {','.join(map(str, image_ids))})
+
+                        response = requests.get(url)
+                        if response.status_code == 200:"""
+
+
 def fifty_chunk(X: int, Y: int, Z: int, count: int) -> None:
     counter = 0
     list = []
@@ -340,3 +370,6 @@ def directories() -> None:
         file_name = os.fsdecode(file)
         file_path = f"{path}/{file_name}"
         upload_file(file_path, file_name)
+
+
+#test_reference_to_image(X= 57.0,Y= 29.0,Z= 18.0, mouse=P4_MOUSE_REFERENCE_ID, )

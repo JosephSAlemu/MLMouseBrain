@@ -21,11 +21,4 @@ class QueryBuilder():
     @reset_query
     def image_to_reference(self) -> None:
         self.query += "/image_to_reference/{section_image_id}.json?x={x_coord}&y={y_coord}"
-    
-if __name__ == "__main__":
-    ob = QueryBuilder()
-    ob.section_image()
-    print(ob.query)
 
-    ob.binarized_section_image()
-    print(ob.query)

@@ -1,11 +1,13 @@
+import csv
 import requests
-from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID
+from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS, CHUNK_HEADERS_V2, P4_CONVERSION, P56_CONVERSION
 from src.query import QueryBuilder
 from src.enums.actions import Action
-from scripts.script import split_section_ids
-
+from scripts.script import split_section_ids, ccf_to_microns
+from src.utils.validation import is_valid_chunk
 
 class Api():
+
     def __init__(self, file: str = None):
         self.file = file
         self.query = None
@@ -20,84 +22,42 @@ class Api():
         Y: int,
         Z: int,
         section_ids: list,
-        counter: int,
-        file_num: int,
+        new_path: int,
         gene: str = None, # type: ignore
     ) -> None:
-        #use this as the new query
-        query = QueryBuilder()
-        self.query = query.reference_to_image()
+        '''
+        Reference-To-Image call based on Allen Mouse Developing Brain Atlas (AMDBA)
+        '''
+        url = QueryBuilder()
+        url.reference_to_image()
+        self.query = url.query
 
         section_id_chunks = split_section_ids(section_ids)
-        if mouse == P56_MOUSE_REFERENCE_ID:
 
-            self.query = self.query.format(reference_id = P56_MOUSE_REFERENCE_ID)
+        m_X, m_Y, m_Z  = ccf_to_microns(mouse=mouse, x=X, y=Y, z=Z)
 
-            # Have a line where you convert this to microns
-            m_X, m_Y, m_Z = float(X) * 200, float(Y) * 200 , float(Z) * 200
+        if is_valid_chunk(new_path, len(section_id_chunks)):
+                
+            with open(new_path, mode="a", newline="") as new_file:
+                writer = csv.writer(new_file)
+                writer.writerow(CHUNK_HEADERS_V2)
 
-            image_ids = []
-            if is_valid_chunk("Chunked", counter):
-                created_file = rf"./Datasets/Outputs/Chunked/P4_Chunk_{counter}.csv"
-                with open(
-                    r"./Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt"
-                ) as file, open(created_file, mode="a", newline="") as new_file:
-                    writer = csv.writer(new_file)
-                    writer.writerow(CHUNK_HEADERS)
+                for image_ids in section_id_chunks:
+                    query = self.query
+                    images = ','.join(map(str, image_ids))
+                    query = query.format(reference_id=P56_MOUSE_REFERENCE_ID, X=m_X, Y=m_Y, Z=m_Z, image_ids=images)
 
-                    image_ids = []
-
-                    for line in file:
-                        if len(image_ids) == 100:
-                            url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
-                            response = requests.get(url)
-                            if response.status_code == 200:
-                                data = f"{response.json()['msg']}"
-                                writer.writerow([counter, data])
-                                image_ids.append(line)
-                            else:
-                                print(f"ISSUE WITH QUERY {url}")
-                        else:
-                            image_ids.append(int(line))
-
-                    url = f"http://api.brain-map.org/api/v2/reference_to_image/10.json?x={X}&y={Y}&z={Z}&section_data_set_ids={','.join(map(str, image_ids))}"
-                    response = requests.get(url)
+                    response = requests.get(query)
                     if response.status_code == 200:
-                        data = f"{response.json()['msg']}"
-                        writer.writerow([counter, data])
-                        image_ids = []
+                        for data in response.json()['msg']:
+                            data = data['image_sync']
+                            arr = [X,Y,Z]
+                            arr += [int(data['section_data_set_id']), int(data['section_image_id']), int(data['x']), int(data['y'])]
+
+                            writer.writerow(arr)
                     else:
                         print(f"ISSUE WITH QUERY {url}")
 
-        elif mouse == P4_MOUSE_REFERENCE_ID:
-            # Reference to Micron conversion
-            X, Y, Z = float(X), float(Y), float(Z)
-            n_X, n_Y, n_Z = X * 160, Y * 160, Z * 160
-
-            if is_valid_chunk("Fill_Negatives", counter):
-                created_file = (
-                    rf"./Datasets/Outputs/Fill_Negatives/{file_num}/P4_Chunk_{counter}.csv"
-                )
-                with open(created_file, mode="a", newline="") as new_file:
-                    writer = csv.writer(new_file)
-                    writer.writerow(CHUNK_HEADERS_V2)
-                    for image_ids in section_id_chunks:
-                        url = f"http://api.brain-map.org/api/v2/reference_to_image/{mouse}.json?x={n_X}&y={n_Y}&z={n_Z}&section_data_set_ids={','.join(map(str, image_ids))}"
-                        response = requests.get(url)
-                        if response.status_code == 200:
-                            result = response.json()["msg"]
-                            for data in result:
-                                data = data["image_sync"]
-                                section_dataset = data["section_data_set_id"]
-                                image = data["section_image_id"]
-                                seed_x = data["x"]
-                                seed_y = data["y"]
-                                writer.writerow(
-                                    [X, Y, Z, section_dataset, image, seed_x, seed_y]
-                                )
-
-                        else:
-                            print(f"ISSUE WITH QUERY {url}")
     
     def image_to_reference(
     self,

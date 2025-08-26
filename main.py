@@ -1,14 +1,15 @@
-from src.constants import HEADERS_V2, HEADERS_V3
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V3
 from src.enums.inequality import Inequality
-from scripts.script import strip_experiments
+from scripts.script import file_to_list, strip_experiments
 from src.utils.utility import Utility
-from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes
+from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.oldimage import histogram, histogram_negative_distribution
 from src.enums.actions import Action
 from src.enums.dimensions import Dimensions
 from src.analysis.kmeans import Kmeans
 from src.api.newapi import Api
 from src.utils.visualize import Visualize
+from src.constants import P56_MOUSE_REFERENCE_ID
 
 import pandas as pd
 
@@ -44,10 +45,15 @@ if __name__ == "__main__":
     #strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
     #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
 
-    #util.get_common_voxels("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_match.csv")
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_50NewDens_match.csv", "Datasets/Outputs/p4_NewDens_match.csv")
 
-    visual = Visualize("Datasets/Outputs/p4_NewDenS.csv", HEADERS_V2)
-    visual.histogram("log", "Expression Range", "Frequency", "Distribution of Voxel Gene Expressions", e_bins=True, right=True)
+    #visual = Visualize("Datasets/Outputs/p4_50NewDens_match.csv", HEADERS)
+    #visual.histogram("log", "Expression Range", "Frequency", "Distribution of Voxel Gene Expressions", e_bins=True, right=True)
     #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
-    
 
+    #retrieve_section_id_from_gene("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt", "Bmp8a")
+
+    dataset_ids = file_to_list("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt")
+
+    api = Api()
+    api.reference_to_image(P56_MOUSE_REFERENCE_ID, X=57.0, Y=29.0, Z=18.0, section_ids=dataset_ids, new_path="Datasets/Outputs/testing.csv")

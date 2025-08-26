@@ -1,11 +1,15 @@
 import pandas as pd
 
-from src.constants import HEADERS
+from src.constants import HEADERS, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, P4_CONVERSION, P56_CONVERSION
+
+'''
+A file of commonly reusable scripts
+'''
 
 def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
-    """
+    '''
     Split array of section id's into a 2d array of sections of 100 for AMBA queries
-    """
+    '''
     length = len(section_ids)
     if length <= 100:
         return [section_ids]
@@ -26,6 +30,9 @@ def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
     return result
 
 def strip_experiments(path: str, new_path: str) -> None:
+    '''
+    Strips the '-' and expirement numbers from gene names
+    '''
     df = pd.read_csv(path)
 
     l = [x.rsplit("-", 1)[0] for x in df.columns]
@@ -33,11 +40,11 @@ def strip_experiments(path: str, new_path: str) -> None:
     print(df.columns)
     df.to_csv(new_path, index=False)
 
-def count_missing_expressions(self, missing: str) -> None:
+def count_missing_expressions(file: str, missing: str) -> None:
     '''
     Counts missing expressions
     '''
-    df = pd.read_csv(self.file)
+    df = pd.read_csv(file)
     print(df.drop(columns=HEADERS))
 
     match missing:
@@ -47,3 +54,26 @@ def count_missing_expressions(self, missing: str) -> None:
             pass
         case _:
             pass
+
+def ccf_to_microns(mouse: int, x: int, y: int, z: int) -> list[int]:
+    '''
+    Based on the mouse, it converts ccf to microns and returns a list of X,Y,Z coordinates
+
+    [0] = X
+    [1] = Y
+    [2] = Z
+    '''
+    if mouse == P4_MOUSE_REFERENCE_ID:
+        return [x*P4_CONVERSION, y*P4_CONVERSION, z*P4_CONVERSION]
+    
+    elif mouse == P56_MOUSE_REFERENCE_ID:
+        return [x*P56_CONVERSION, y*P56_CONVERSION, z*P56_CONVERSION]
+
+def file_to_list(path: str, type: str = None) -> list:
+    '''
+    Takes in a text file and returns the contents
+    '''
+    arr = []
+    with open(path, "r") as file:
+        arr = [int(line) for line in file]
+    return arr

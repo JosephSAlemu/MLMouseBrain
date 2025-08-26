@@ -187,33 +187,27 @@ class Utility():
         
         pass
 
-    def get_common_voxels(self, other_path: str, new_path: str) -> None:
+    def get_common_voxels_and_genes(self, other_path: str, new_path_one: str, new_path_two: str) -> None:
         '''
-        Finds the common voxels from dataframes (Voxels x Genes)
+        Finds the common voxel coordinates (X,Y,Z) and genes from both dataframes.
+        
+        Creates Two New Dataframe of the common genes and voxels.
 
-        Must have X,Y,Z
+        Must have X,Y,Z columns in both dataframes.
         '''
         df = pd.read_csv(self.file)
         other_df = pd.read_csv(other_path)
-        
         df[HEADERS] = df[HEADERS].astype(float)
         other_df[HEADERS] = other_df[HEADERS].astype(float)
-        missing = df.columns.difference(other_df.columns)
-        genes = df.columns.difference(missing.append(pd.Index(HEADERS)))
-
-
-        print(genes)
-        df.drop(columns=missing, inplace=True)
 
         match = pd.DataFrame()
+
+        # Reminder to self, _x is left and _y is right
         match = df.merge(other_df, how = 'inner', left_on=["X", "Y", "Z"], right_on=["X", "Y", "Z"])
-        match_v = match.copy()
-        match = match[HEADERS]
+        
+        df_match = match[HEADERS + [gene for gene in match.columns if "_x" in gene]]  
+        other_match = match[HEADERS + [gene for gene in match.columns if "_y" in gene]]
 
-        print(match)
-        for gene in genes:
-            x = f"{gene}_x"
-            y = f"{gene}_y"
-            match[gene] = (match_v[x] - match_v[y]).abs()
+        df_match.to_csv(new_path_one, index=False)
+        other_match.to_csv(new_path_two, index=False)
 
-        match.to_csv(new_path, index=False )

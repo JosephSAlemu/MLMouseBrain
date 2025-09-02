@@ -1,20 +1,38 @@
 import csv
 import requests
+import os
+import pandas as pd
 from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS, CHUNK_HEADERS_V2, P4_CONVERSION, P56_CONVERSION
 from src.query import QueryBuilder
 from src.enums.actions import Action
-from scripts.script import split_section_ids, ccf_to_microns
 from src.utils.validation import is_valid_chunk
+from scripts.script import file_to_list, split_section_ids, ccf_to_microns
 
 class Api():
 
-    def __init__(self, file: str = None, mouse: str = None):
-        self.file = file
+    def __init__(self, mouse: int = None):
         self.mouse = mouse
         self.query = None
     
     def download_section_images(self) -> None:
         pass
+
+    def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_name: str, file_name: str = "Chunk") -> None:
+        '''
+        Given the voxel path, section_id, path, and the file_name call the reference_to_image api
+        '''
+        self.query = QueryBuilder()
+        self.query.reference_to_image()
+
+        file_to_list(section_ids_path, int)
+        section_ids = split_section_ids(section_ids)
+        
+        full_path = os.path.join(dir_name, file_name)
+
+        df = pd.read_csv(voxels_path)
+        for row in df.itertuples():
+            new_path = f"{full_path}_{row.index}.csv"
+            self.reference_to_image(row.X, row.Y, row.Z, section_ids, new_path)
 
     def reference_to_image(
         self,
@@ -29,21 +47,15 @@ class Api():
 
         Converts from the mouse reference space to the target images for the section data sets 
         '''
-        url = QueryBuilder()
-        url.reference_to_image()
-        self.query = url.query
-
-        section_id_chunks = split_section_ids(section_ids)
-
         m_X, m_Y, m_Z = ccf_to_microns(mouse=self.mouse, x=X, y=Y, z=Z)
 
-        if is_valid_chunk(new_path, len(section_id_chunks)):
+        if is_valid_chunk(new_path, len(section_ids)):
                 
             with open(new_path, mode="a", newline="") as new_file:
                 writer = csv.writer(new_file)
                 writer.writerow(CHUNK_HEADERS_V2)
 
-                for image_ids in section_id_chunks:
+                for image_ids in section_ids:
                     query = self.query
                     images = ','.join(map(str, image_ids))
                     query = query.format(reference_id=P56_MOUSE_REFERENCE_ID, X=m_X, Y=m_Y, Z=m_Z, image_ids=images)
@@ -57,23 +69,20 @@ class Api():
 
                             writer.writerow(arr)
                     else:
-                        print(f"ISSUE WITH QUERY {url}")
+                        print(f"ISSUE WITH QUERY {query}")
 
     
     def image_to_reference(
     self,
-    mouse: int,
     section_image_id: int, 
     X: int, 
     Y: int,
-    
+    new_path: str
     ) -> tuple | None:
         '''
-        takes in the section image for a gene and the centroid coordinates for the bin in that section image
+        Image-To-Reference call based on Allen Mouse Developing Brain Atlas (AMDBA).
 
-        divides all the coordinates by 160 to get the reference space coordinates
-
-        returns the result of that query as tuple of the voxel coordinates
+        Converts from section image, x coordinate, and y coordinate to voxel coordinates in the mouse reference space
         '''
         query = QueryBuilder()
         self.query = query.image_to_reference()

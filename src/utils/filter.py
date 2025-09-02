@@ -55,8 +55,10 @@ def retrieve_gene_from_section_id(section_dataset_id: int) -> str:
     else:
         print(f"ISSUE WITH QUERY {url}")
 
-def retrieve_section_id_from_gene(path: str, gene: str) -> int:
+def retrieve_section_id_from_gene(file: str, gene: str) -> int:
     '''
+    Takes in a textiowrapper for a file of section_id's
+
     given a path to a list of section id's you have and a gene name
 
     returns the section id from the gene name.
@@ -68,12 +70,10 @@ def retrieve_section_id_from_gene(path: str, gene: str) -> int:
         for section_image in response.json()['msg']:
             temp.append(section_image['section_images'][0]['data_set_id'])
 
-        with open(path) as file:
-            for i in file:
-                id = int(i)
-                if id in temp:
-                    print(id)
-
+        for i in file:
+            id = int(i)
+            if id in temp:
+                return id
 
 def group_data(voxel: int) -> list[dict]:
     '''

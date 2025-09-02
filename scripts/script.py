@@ -1,7 +1,7 @@
 import pandas as pd
 
 from src.constants import HEADERS, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, P4_CONVERSION, P56_CONVERSION
-
+from typing import Callable, Any
 '''
 A file of commonly reusable scripts
 '''
@@ -69,11 +69,14 @@ def ccf_to_microns(mouse: int, x: int, y: int, z: int) -> list[int]:
     elif mouse == P56_MOUSE_REFERENCE_ID:
         return [x*P56_CONVERSION, y*P56_CONVERSION, z*P56_CONVERSION]
 
-def file_to_list(path: str, type: str = None) -> list:
+def file_to_list(path: str, type: Callable[[str], Any] = str) -> list:
     '''
-    Takes in a text file and returns the contents
+    Takes in a text file
+    Casts to the type provided
+    
+    returns an array of the text files contents.
     '''
     arr = []
     with open(path, "r") as file:
-        arr = [int(line) for line in file]
+        arr = [type(line) for line in file]
     return arr

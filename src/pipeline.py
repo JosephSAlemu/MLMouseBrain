@@ -1,39 +1,61 @@
 import os
 
-def pipleline() -> None:
-    '''
-    Starts the data pipeline
-    '''
-    print("Start data pipeline? (Y/N): ")
-    while True:
-        ans = input().rstrip().upper()
-        if ans == "Y":
-            api()
-        elif ans == "N":
-            break
-        else:
-            print("give a valid input")
+from typing import Callable
+from src.choice import print_constants, print_callable
+from src.api.newapi import Api
+from scripts.script import file_to_list
+from src.constants import AVAILABLE_MICE, P56_MOUSE_REFERENCE_ID, P4_MOUSE_REFERENCE_ID
+from src.utils.validation import is_valid
+
+
+def exit_program():
+    exit(0)
 
 def api() -> None:
     '''
     Gathering Section_Images for the API
     '''
-    print("Ensure you have a CSV of voxels and a TXT file of section_data_set_ids")
+    AllenApi = Api()
+    print("\nEnsure you have a CSV of voxels and a TXT file of section_data_set_ids")
     while True:
         paths = []
 
         print("Enter your CSV file path: ")
-        path = input().rstrip()
-        paths.append(path)
-        while os.path.exists(path):
+        csv_path = input().rstrip()
+        
+        while os.path.exists(csv_path):
+            AllenApi.file = csv_path
+
             print("Enter your TXT file: ")
-            path = input().rstrip()
-            paths.append(path)
+            txt_path = input().rstrip()
+            paths.append(txt_path)
+            
+            while os.path.exists(txt_path):
+                dataset_ids = file_to_list("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt")
 
-            while os.path.exists(path):
+                AllenApi.mouse = print_constants(
+                    "Here are the available mice",
+                    AVAILABLE_MICE,
+                    "Which mouse do you want?"
+                )
+                print("Enter the directory ")
+                AllenApi.reference_to_image()
+                print(AllenApi.mouse)
                 
+def main():
+    print("Starting...\n")
 
+    while True:
+        actions: [Callable] = {
+            "Allen API": api,
+            "Exit": exit_program
+        }
+        print_callable(
+            "Here are your options.",
+            actions,
+            "What would you like to do with our program: "
+        )
+        
+            
 
         
-
-pipleline()

@@ -14,7 +14,7 @@ def filter_p4_data() -> None:
     '''
     Filters out the P_4 structures in order to seclude the brainstem structure.
     '''
-    fil = pd.read_csv(r'C:\Users\jojoa\Downloads\Motorola_Research\ExcelScript\Datasets\Outputs\P4_Complete_Brain.csv')
+    fil = pd.read_csv("")
     answer = fil.loc[fil['structure_id'] > 17290]
     answer.to_csv("./Datasets/Outputs/P4_Complete_Brainstem.csv", index=False)
     with open(r'./result.txt', mode ="w") as ff:

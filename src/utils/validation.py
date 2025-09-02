@@ -40,6 +40,4 @@ def is_valid(path: str) -> bool:
     '''
     Given a path, determine if it's
     '''
-    if os.path.exists(path):
-        return False
-    return True
+    return not os.path.exists(path)

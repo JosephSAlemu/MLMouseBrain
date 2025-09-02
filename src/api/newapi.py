@@ -8,8 +8,9 @@ from src.utils.validation import is_valid_chunk
 
 class Api():
 
-    def __init__(self, file: str = None):
+    def __init__(self, file: str = None, mouse: str = None):
         self.file = file
+        self.mouse = mouse
         self.query = None
     
     def download_section_images(self) -> None:
@@ -23,10 +24,11 @@ class Api():
         Z: int,
         section_ids: list,
         new_path: int,
-        gene: str = None, # type: ignore
     ) -> None:
         '''
-        Reference-To-Image call based on Allen Mouse Developing Brain Atlas (AMDBA)
+        Reference-To-Image call based on Allen Mouse Developing Brain Atlas (AMDBA).
+
+        Converts from the mouse reference space to the target images for the section data sets 
         '''
         url = QueryBuilder()
         url.reference_to_image()

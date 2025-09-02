@@ -10,6 +10,7 @@ from src.analysis.kmeans import Kmeans
 from src.api.newapi import Api
 from src.utils.visualize import Visualize
 from src.constants import P56_MOUSE_REFERENCE_ID
+from src.pipeline import main
 
 import pandas as pd
 
@@ -53,7 +54,4 @@ if __name__ == "__main__":
 
     #retrieve_section_id_from_gene("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt", "Bmp8a")
 
-    dataset_ids = file_to_list("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt")
-
-    api = Api()
-    api.reference_to_image(P56_MOUSE_REFERENCE_ID, X=57.0, Y=29.0, Z=18.0, section_ids=dataset_ids, new_path="Datasets/Outputs/testing.csv")
+    main()

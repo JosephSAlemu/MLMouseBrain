@@ -18,7 +18,6 @@ class Api():
 
     def reference_to_image(
         self,
-        mouse: int,
         X: int,
         Y: int,
         Z: int,
@@ -36,7 +35,7 @@ class Api():
 
         section_id_chunks = split_section_ids(section_ids)
 
-        m_X, m_Y, m_Z  = ccf_to_microns(mouse=mouse, x=X, y=Y, z=Z)
+        m_X, m_Y, m_Z = ccf_to_microns(mouse=self.mouse, x=X, y=Y, z=Z)
 
         if is_valid_chunk(new_path, len(section_id_chunks)):
                 

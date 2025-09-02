@@ -31,14 +31,18 @@ def api() -> None:
             paths.append(txt_path)
             
             while os.path.exists(txt_path):
-                dataset_ids = file_to_list("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt")
+                dataset_ids = file_to_list(txt_path)
 
                 AllenApi.mouse = print_constants(
                     "Here are the available mice",
                     AVAILABLE_MICE,
                     "Which mouse do you want?"
                 )
-                print("Enter the directory ")
+                print("Enter the directory you want to save the files in: ")
+                dir = input().rstrip()
+                if is_valid(dir):
+                    os.mkdir(dir)
+                
                 AllenApi.reference_to_image()
                 print(AllenApi.mouse)
                 

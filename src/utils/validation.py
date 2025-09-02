@@ -38,6 +38,9 @@ def is_valid_chunk(path: str, expected_size: int) -> bool | str:
 
 def is_valid(path: str) -> bool:
     '''
-    Given a path, determine if it's
+    Given a path, determine if it already exists
+
+    If it exists: Return False. you can't create the file/dir.
+    If it doesn't exist: Return True. You can create the file/dir.
     '''
     return not os.path.exists(path)

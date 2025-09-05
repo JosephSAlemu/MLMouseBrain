@@ -1,3 +1,8 @@
+import numpy as np
+import cv2
+from src.constants import DENSITY
+from src.voxel.voxel import Box
+from typing import NewType
 
 class Image():
     def __init__(self):
@@ -8,34 +13,26 @@ class Image():
         Retrieves all the seed voxels
         '''
     
-    def measure_gene_expression_density(x_min: int, x_max: int, y_min: int, y_max: int, section_image_id: str) -> int:
+    def measure_gene_expression_density(box: Box, section_image_path: str) -> int:
         '''
-        measures the gene expression given a 
-        
+        measures the gene expression given a Box and a section_image
         '''
-
-        """
-        measure a the density for a section image given a section_image_id, x_min & x_max for the width, and a y_min & y_max for the height
-
-        if the mins is less than zero or the max-1 (where range stops) is greater than the image, then return None
-        """
-        image = cv2.imread(f"./Datasets/SectionImages/{section_image_id}.jpg")
+        image = cv2.imread(section_image_path)
         
         height, width = image.shape[:2]
 
-        print(height, width, x_min, x_max, y_min, y_max, section_image_id)
-        if x_min < 0 or y_min < 0 or x_max > width or y_max > height:
-            return None
+        if box.x_min < 0 or box.y_min < 0 or box.x_max > width or box.y_max > height:
+            return -1
 
-        # Extract the region of interest (ROI)
-        roi = image[y_min:y_max, x_min:x_max]
+        image_box = image[box.y_min:box.y_max, box.x_min:box.x_max]
 
-        # Create a boolean mask of pixels where any channel is non-zero
-        expressed_mask = np.any(roi > 0, axis=2)
+        expressed_mask = np.any(image_box > 0, axis=2)
 
-        # Count the number of "expressed" pixels
         expressed_count = np.count_nonzero(expressed_mask)
 
-        # Calculate density
         gene_expression = expressed_count / DENSITY
         return gene_expression
+
+
+
+

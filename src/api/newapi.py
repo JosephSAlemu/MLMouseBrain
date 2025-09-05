@@ -5,14 +5,14 @@ import pandas as pd
 from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_HEADERS, CHUNK_HEADERS_V2, P4_CONVERSION, P56_CONVERSION
 from src.query import QueryBuilder
 from src.enums.actions import Action
-from src.utils.validation import is_valid_chunk
+from src.utils.validation import is_valid_chunk, is_valid_image
 from scripts.script import file_to_list, split_section_ids, ccf_to_microns
 
 class Api():
 
     def __init__(self, mouse: int = None):
         self.mouse = mouse
-        self.query = None
+        self.query = QueryBuilder()
     
     def download_section_images(self) -> None:
         pass
@@ -21,7 +21,6 @@ class Api():
         '''
         Given the voxel path, section_id, path, and the file_name call the reference_to_image api
         '''
-        self.query = QueryBuilder()
         self.query.reference_to_image()
 
         section_ids = file_to_list(section_ids_path, int)
@@ -62,12 +61,12 @@ class Api():
                 writer.writerow(CHUNK_HEADERS_V2)
 
                 for image_ids in section_ids:
-                    query = self.query.query
+                    query = self.query.url
                     images = ','.join(map(str, image_ids))
                     query = query.format(reference_id=P56_MOUSE_REFERENCE_ID, X=m_X, Y=m_Y, Z=m_Z, image_ids=images)
 
                     response = requests.get(query)
-                    
+
                     if response.status_code == 200:
                         for data in response.json()['msg']:
                             data = data['image_sync']
@@ -113,3 +112,19 @@ class Api():
         except requests.RequestException as e:
             print(f"Request failed: {e}")
             return None
+    
+    def download_binarized_image(self, section_image_id) -> None:
+        '''
+        Given a section_image_id, it downloads the binarized image
+        '''
+        self.query.binarized_section_image()
+
+
+        while is_valid_image(section_image):
+        path = rf"./Datasets/SectionImages/{section_image}.jpg"
+        url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
+        response = requests.get(url, stream=True)
+        response.raise_for_status()
+        with open(path, "wb") as file:
+            for chunk in response:
+                file.write(chunk)

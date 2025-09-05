@@ -1,6 +1,15 @@
-- All function comments must be done with single quote marks 
+- All function/method comments must be done with single quote marks 
 (ex: '''
      does <blank>
+     ''')
+
+- All function/method comments must have an Args and Returns explaining parameters and what it returns (if needed)
+(ex: '''
+     Args:
+          thread_chunk_tuple: tuple of thread start index and stop index
+
+     Returns:
+          None
      ''')
 
 - All strings must have double quotations.

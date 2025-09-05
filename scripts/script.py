@@ -80,3 +80,11 @@ def file_to_list(path: str, type: Callable[[str], Any] = str) -> list:
     with open(path, "r") as file:
         arr = [type(line) for line in file]
     return arr
+
+def length(file: str) -> int:
+    '''
+    Takes in a path to a csv file
+
+    returns the length of the file
+    '''
+    return len(pd.read_csv(file))

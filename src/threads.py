@@ -1,12 +1,14 @@
-from threading import Thread
-from image.oldimage import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
-from utils.filter import (partition_section_images)
-from constants import (RETRIEVE_VOXELS, RETRIEVE_IMAGES, CREATE_FILES, CREATE_DATAFRAME, FILE_START, FILE_END, REANALYSIS)
 import pandas as pd
-
+from collections.abc import Callable
+from typing import Any
+from threading import Thread
+from src.image.oldimage import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
+from src.utils.filter import (partition_section_images)
+from src.enums.actions import Action
+from src.api.newapi import Api
 
 class Threads:
-    def __init__(self, start: int, stop: int, file: str|int|None):
+    def __init__(self, start: int, stop: int, file: str|int = None):
         self.start = start
         self.stop = stop
         self.file = file
@@ -37,67 +39,79 @@ class Threads:
         """
         download_section_images(self.start, self.stop)
 
-        
-def use_threads(length: int, thread_count: int, file: str|int|None, func: int) -> None:
+    def ref_to_img(self, func: Callable, args: list[Any]) -> None:
+        func(*args, thread_chunk_size = (self.start, self.stop))
+
+
+
+def use_threads(length: int, thread_count: int, func: Action, caller: Callable, arguments: list[Any] | None, file: str|int = None) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
     '''
     thread_instances = []
     threads = []
     increment = length//thread_count
+    count = 0
+    match func:
+        case Action.REANALYSIS:
+            while count < length:
+                #append threads in a list
+                print(f"{count} - {count+increment-1}")
+                thread_instances.append(Threads(count, count+increment-1, file))
+                count+=increment
 
-    if func == REANALYSIS:
-        count = 0
+            for instance in thread_instances:
+                thread = Thread(target = instance.reanalysis)
+                threads.append(thread)
+                thread.start()
 
-        while count < length:
-            #append threads in a list
-            print(f"{count} - {count+increment-1}")
-            thread_instances.append(Threads(count, count+increment-1, file))
-            count+=increment
+        case Action.CREATE_FILES:
+            count = 1
 
-        for instance in thread_instances:
-            thread = Thread(target = instance.reanalysis)
-            threads.append(thread)
-            thread.start()
-        
-    elif func == CREATE_FILES:
-        count = 1
+            while count <= length:
+                print(f"{count}-{count+increment}")
+                thread_instances.append(Threads(count, count+increment, file))
+                count+=increment
 
-        while count <= length:
-            print(f"{count}-{count+increment}")
-            thread_instances.append(Threads(count, count+increment, file))
-            count+=increment
+            for instance in thread_instances:
+                thread = Thread(target = instance.create_files)
+                threads.append(thread)
+                thread.start()
+        case Action.CREATE_DATAFRAME:
+            while count < length:
+                #append threads in a list
+                print(f"{count} - {count+increment}")
+                thread_instances.append(Threads(count, count+increment, file))
+                count+=increment
 
-        for instance in thread_instances:
-            thread = Thread(target = instance.create_files)
-            threads.append(thread)
-            thread.start()
+            for instance in thread_instances:
+                thread = Thread(target = instance.create_dataframe)
+                threads.append(thread)
+                thread.start()
 
-    elif func == CREATE_DATAFRAME:
-        count = 0
+        case Action.RETRIEVE_IMAGES:
+            while count < length:
+                print(f"{count}-{count+increment}")
+                thread_instances.append(Threads(count, count+increment, file))
+                count+=increment
+            
+            for instance in thread_instances:
+                thread = Thread(target = instance.download_section_images)
+                threads.append(thread)
+                thread.start()
 
-        while count < length:
-            #append threads in a list
-            print(f"{count} - {count+increment}")
-            thread_instances.append(Threads(count, count+increment, file))
-            count+=increment
+        case Action.REF_TO_IMG:
+            while count < length:
+                #append threads in a list
+                print(f"{count} - {count+increment}")
+                thread_instances.append(Threads(count, count+increment))
+                count+=increment
+            
+            for instance in thread_instances:
+                thread = Thread(target = instance.ref_to_img, args=(caller.start_ref_to_img, arguments))
+                threads.append(thread)
+                thread.start()
 
-        for instance in thread_instances:
-            thread = Thread(target = instance.create_dataframe)
-            threads.append(thread)
-            thread.start()
-    
-    elif func == RETRIEVE_IMAGES:
-        count = 0
-        while count < length:
-            print(f"{count}-{count+increment}")
-            thread_instances.append(Threads(count, count+increment, file))
-            count+=increment
-        
-        for instance in thread_instances:
-            thread = Thread(target = instance.download_section_images)
-            threads.append(thread)
-            thread.start()
 
     for thread in threads:
             thread.join()

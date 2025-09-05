@@ -17,22 +17,28 @@ class Api():
     def download_section_images(self) -> None:
         pass
 
-    def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_name: str, file_name: str = "Chunk") -> None:
+    def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_name: str, thread_chunk_size: tuple = None, file_name: str = "Chunk") -> None:
         '''
         Given the voxel path, section_id, path, and the file_name call the reference_to_image api
         '''
         self.query = QueryBuilder()
         self.query.reference_to_image()
 
-        file_to_list(section_ids_path, int)
+        section_ids = file_to_list(section_ids_path, int)
         section_ids = split_section_ids(section_ids)
         
         full_path = os.path.join(dir_name, file_name)
-
+        
         df = pd.read_csv(voxels_path)
+
+        if thread_chunk_size is not None:
+            start, stop = thread_chunk_size
+            df = df.iloc[start:stop]
+
         for row in df.itertuples():
-            new_path = f"{full_path}_{row.index}.csv"
-            self.reference_to_image(row.X, row.Y, row.Z, section_ids, new_path)
+            new_path = f"{full_path}_{row.Index}.csv"
+            self.reference_to_image(row.X, row.Y, row.Z, section_ids, new_path)            
+            
 
     def reference_to_image(
         self,
@@ -56,11 +62,12 @@ class Api():
                 writer.writerow(CHUNK_HEADERS_V2)
 
                 for image_ids in section_ids:
-                    query = self.query
+                    query = self.query.query
                     images = ','.join(map(str, image_ids))
                     query = query.format(reference_id=P56_MOUSE_REFERENCE_ID, X=m_X, Y=m_Y, Z=m_Z, image_ids=images)
 
                     response = requests.get(query)
+                    
                     if response.status_code == 200:
                         for data in response.json()['msg']:
                             data = data['image_sync']

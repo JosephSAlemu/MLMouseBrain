@@ -1,6 +1,10 @@
 from enum import Enum, auto
 
 class Action(Enum):
+    '''
+    Enums mainly for thread class
+    '''
+    REF_TO_IMG = auto()
 
     GET_IMAGE_IDS = auto()
 

@@ -3,7 +3,7 @@ from src.enums.inequality import Inequality
 from scripts.script import file_to_list, strip_experiments
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
-from src.image.oldimage import histogram, histogram_negative_distribution
+from src.image.image import histogram, histogram_negative_distribution
 from src.enums.actions import Action
 from src.enums.dimensions import Dimensions
 from src.analysis.kmeans import Kmeans

@@ -2,7 +2,7 @@ import pandas as pd
 from collections.abc import Callable
 from typing import Any
 from threading import Thread
-from src.image.oldimage import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
+from src.image.image import (calculate_density_and_voxels, fill_negative_density, get_expressions, download_section_images)
 from src.utils.filter import (partition_section_images)
 from src.enums.actions import Action
 from src.api.newapi import Api

@@ -2,7 +2,7 @@ import os
 import pandas as pd
 
 
-def is_valid_image(path: str, section_image: str) -> bool:
+def is_valid_image(path: str) -> bool:
     '''
     Given a path to an image, determine if the image is corrupt (redownload), already exists (skip), or doesn't exist (download).
 
@@ -13,7 +13,7 @@ def is_valid_image(path: str, section_image: str) -> bool:
         with open(path, 'rb') as f:
             check_chars = f.read()[-2:]
         if check_chars != b'\xff\xd9':
-            print(f"{section_image} is errored")
+            print(f"{path} is errored")
             return True
         return False
     return True
@@ -40,7 +40,7 @@ def is_valid(path: str) -> bool:
     '''
     Given a path, determine if it already exists
 
-    If it exists: Return False. you can't create the file/dir.
-    If it doesn't exist: Return True. You can create the file/dir.
+    True = You can create the file/dir.
+    False = You can't create the file/dir.
     '''
     return not os.path.exists(path)

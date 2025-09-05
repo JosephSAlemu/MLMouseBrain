@@ -17,7 +17,7 @@ class Api():
     def download_section_images(self) -> None:
         pass
 
-    def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_name: str, thread_chunk_size: tuple = None, file_name: str = "Chunk") -> None:
+    def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_path: str, thread_chunk_size: tuple = None, file_name: str = "Chunk") -> None:
         '''
         Given the voxel path, section_id, path, and the file_name call the reference_to_image api
         '''
@@ -26,7 +26,7 @@ class Api():
         section_ids = file_to_list(section_ids_path, int)
         section_ids = split_section_ids(section_ids)
         
-        full_path = os.path.join(dir_name, file_name)
+        full_path = os.path.join(dir_path, file_name)
         
         df = pd.read_csv(voxels_path)
 
@@ -113,18 +113,19 @@ class Api():
             print(f"Request failed: {e}")
             return None
     
-    def download_binarized_image(self, section_image_id) -> None:
+    def download_binarized_image(self, section_image_id: int, dir_path: str) -> None:
         '''
-        Given a section_image_id, it downloads the binarized image
+        Given a section_image_id and the directory you want to save the image to, the function downloads a binarized version of the section_image
         '''
         self.query.binarized_section_image()
+        print(self.query.url)
+        query = self.query.url.format(image_id = section_image_id)
 
-
-        while is_valid_image(section_image):
-        path = rf"./Datasets/SectionImages/{section_image}.jpg"
-        url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        with open(path, "wb") as file:
-            for chunk in response:
-                file.write(chunk)
+        new_path = os.path.join(dir_path, f"{section_image_id}.jpg")
+        
+        while is_valid_image(new_path):
+            response = requests.get(query, stream=True)
+            response.raise_for_status()
+            with open(new_path, "wb") as file:
+                for chunk in response:
+                    file.write(chunk)

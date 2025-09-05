@@ -29,11 +29,11 @@ def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
 
     return result
 
-def strip_experiments(path: str, new_path: str) -> None:
+def strip_experiments(file: str, new_path: str) -> None:
     '''
     Strips the '-' and expirement numbers from gene names
     '''
-    df = pd.read_csv(path)
+    df = pd.read_csv(file)
 
     l = [x.rsplit("-", 1)[0] for x in df.columns]
     df.columns = l
@@ -69,7 +69,7 @@ def ccf_to_microns(mouse: int, x: int, y: int, z: int) -> list[int]:
     elif mouse == P56_MOUSE_REFERENCE_ID:
         return [x*P56_CONVERSION, y*P56_CONVERSION, z*P56_CONVERSION]
 
-def file_to_list(path: str, type: Callable[[str], Any] = str) -> list:
+def file_to_list(file: str, type: Callable[[str], Any] = str) -> list:
     '''
     Takes in a text file
     Casts to the type provided
@@ -77,7 +77,7 @@ def file_to_list(path: str, type: Callable[[str], Any] = str) -> list:
     returns an array of the text files contents.
     '''
     arr = []
-    with open(path, "r") as file:
+    with open(file, "r") as file:
         arr = [type(line) for line in file]
     return arr
 
@@ -88,3 +88,6 @@ def length(file: str) -> int:
     returns the length of the file
     '''
     return len(pd.read_csv(file))
+
+def read(file: str) -> pd.DataFrame:
+    return pd.read_csv(file)

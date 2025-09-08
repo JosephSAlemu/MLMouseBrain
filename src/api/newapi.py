@@ -6,7 +6,7 @@ from src.constants import P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, CHUNK_H
 from src.query import QueryBuilder
 from src.enums.actions import Action
 from src.utils.validation import is_valid_chunk, is_valid_image
-from scripts.script import file_to_list, split_section_ids, ccf_to_microns
+from scripts.script import file_to_list, split_section_ids, ccf_to_microns, read
 
 class Api():
 
@@ -19,7 +19,7 @@ class Api():
 
     def start_ref_to_img(self, voxels_path: str, section_ids_path: str, dir_path: str, thread_chunk_size: tuple = None, file_name: str = "Chunk") -> None:
         '''
-        Given the voxel path, section_id, path, and the file_name call the reference_to_image api
+        Given the voxel path, section_id, path, and the file_name call reference_to_image()
         '''
         self.query.reference_to_image()
 
@@ -28,7 +28,7 @@ class Api():
         
         full_path = os.path.join(dir_path, file_name)
         
-        df = pd.read_csv(voxels_path)
+        df = read(voxels_path)
 
         if thread_chunk_size is not None:
             start, stop = thread_chunk_size
@@ -36,7 +36,25 @@ class Api():
 
         for row in df.itertuples():
             new_path = f"{full_path}_{row.Index}.csv"
-            self.reference_to_image(row.X, row.Y, row.Z, section_ids, new_path)            
+            self.reference_to_image(row.X, row.Y, row.Z, section_ids, new_path)
+
+    def start_img_to_ref(self, voxels_path: str, section_ids_path: str, dir_path: str, thread_chunk_size: tuple = None, file_name: str = "Chunk") -> None:
+        '''
+        Given the voxel path, section_id, path, and the file_name call image_to_reference()
+        '''
+        pass
+
+    def start_download_binarized(self, voxels_path: str, dir_path: str, thread_chunk_size: tuple = None) -> None:
+        '''
+        Given the voxel path, section_id, path, and the file_name call download_binarized_image()
+        '''
+        df = read(voxels_path)
+        if thread_chunk_size is not None:
+            start, stop = thread_chunk_size
+            df = df.iloc[start:stop]
+
+        for row in df.itertuples():
+            self.download_binarized_image(row.Section_Image, dir_path)
             
 
     def reference_to_image(
@@ -56,7 +74,7 @@ class Api():
 
         if is_valid_chunk(new_path, len(section_ids)):
                 
-            with open(new_path, mode="a", newline="") as new_file:
+            with open(new_path, mode="w", newline="") as new_file:
                 writer = csv.writer(new_file)
                 writer.writerow(CHUNK_HEADERS_V2)
 
@@ -118,7 +136,6 @@ class Api():
         Given a section_image_id and the directory you want to save the image to, the function downloads a binarized version of the section_image
         '''
         self.query.binarized_section_image()
-        print(self.query.url)
         query = self.query.url.format(image_id = section_image_id)
 
         new_path = os.path.join(dir_path, f"{section_image_id}.jpg")

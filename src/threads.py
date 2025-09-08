@@ -39,12 +39,13 @@ class Threads:
         """
         download_section_images(self.start, self.stop)
 
-    def ref_to_img(self, func: Callable, args: list[Any]) -> None:
+    def threaded_func(self, func: Callable, args: list[Any]) -> None:
         func(*args, thread_chunk_size = (self.start, self.stop))
 
 
 
-def use_threads(length: int, thread_count: int, func: Action, caller: Callable, arguments: list[Any] | None, file: str|int = None) -> None:
+
+def use_threads(length: int, thread_count: int, func: Action | None, caller: Callable, arguments: list[Any] | None, file: str|int = None) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.
     '''
@@ -100,7 +101,7 @@ def use_threads(length: int, thread_count: int, func: Action, caller: Callable, 
                 threads.append(thread)
                 thread.start()
 
-        case Action.REF_TO_IMG:
+        case None:
             while count < length:
                 #append threads in a list
                 print(f"{count} - {count+increment}")
@@ -108,9 +109,10 @@ def use_threads(length: int, thread_count: int, func: Action, caller: Callable, 
                 count+=increment
             
             for instance in thread_instances:
-                thread = Thread(target = instance.ref_to_img, args=(caller.start_ref_to_img, arguments))
+                thread = Thread(target = instance.threaded_func, args=(caller, arguments))
                 threads.append(thread)
                 thread.start()
+        
 
 
     for thread in threads:

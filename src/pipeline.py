@@ -5,15 +5,47 @@ from src.enums.actions import Action
 from src.choice import print_constants, print_callable
 from src.threads import use_threads
 from src.api.newapi import Api
+from src.image.newimage import Image
 from src.constants import AVAILABLE_MICE
 from src.utils.validation import is_valid
 from src.utils.filter import retrieve_section_id_from_gene
 from scripts.script import length, read
 
-def exit_program():
+def exit_program() -> None:
     exit(0)
 
+def multithread(csv_path: str) -> tuple | None:
+    while True:
+        print("--Do you want to multithread the call? (Y/N): ")
+        answer = input().rstrip().upper()
+        if answer == "Y":
+            size = length(csv_path)
+            while True:
+                print(f"--How many threads do you want? (Must be a factor of {size}): ")
+                threads = input().rstrip()
+                if threads.isdigit():
+                    threads = int(threads)
+                    if size%threads == 0:
+                        return (size, threads)
+                        
+                print("--Input a valid option\n")
+            
+        elif answer == "N":
+            return None
+
 def api() -> None:
+    actions: [Callable] = {
+        "Reference To Image": ref_to_image,
+        "Image To Reference": image_to_ref
+    }
+
+    print_callable(
+        "Here are your options.",
+        actions,
+        "Which API call would you like to do: "
+    )
+
+def ref_to_image() -> None:
     '''
     function to handle choices for the api class
     '''
@@ -54,28 +86,17 @@ def api() -> None:
     )
     
     print("--Enter the directory you want to save the files in: ")
-    dir = input().rstrip()
-    if is_valid(dir):
-        os.mkdir(dir)
+    dir_path = input().rstrip()
+    if is_valid(dir_path):
+        os.mkdir(dir_path)
     
-
-    print("--Do you want to multithread the call? (Y/N): ")
-    answer = input().rstrip().upper()
-    while True:
-        if answer == "Y":
-            size = length(csv_path)
-            while True:
-                print("--How many threads do you want?: ")
-                threads = input().rstrip()
-                if threads.isdigit():
-                    threads = int(threads)
-                    if size%threads == 0:
-                        use_threads(size, threads, Action.REF_TO_IMG, AllenApi, [csv_path, txt_path, dir])
-                        
-                print("--Input a valid option\n")
-            
-        elif answer == "N":        
-            AllenApi.start_ref_to_img(csv_path, txt_path, dir)
+    response = multithread(csv_path)
+    if response is not None:
+        size, threads = response
+        use_threads(size, threads, None, AllenApi.start_ref_to_img, [csv_path, txt_path, dir_path])
+    else:
+        AllenApi.start_ref_to_img(csv_path, txt_path, dir_path)
+    
     
 def image() -> None:
     '''
@@ -107,17 +128,46 @@ def image() -> None:
         answer = input().rstrip().upper()
 
         if answer == "Y":
+            AllenApi = Api()
+
             print("--Enter the directory path for downloading images ")
             dir_path = input().rstrip()
                 
             if not is_valid(dir_path):
-                api = Api()
-                df = read(csv_path)
-                for row in df.itertuples():
-                    api.download_binarized_image(row.Section_Image, dir_path)
+                response = multithread(csv_path)
+                print("idk")
+
+                if response is not None:
+                    size, threads = response
+                    use_threads(size, threads, None, AllenApi.start_download_binarized, [csv_path, dir_path])
+                else:
+                    df = read(csv_path)
+                    for row in df.itertuples():
+                        AllenApi.download_binarized_image(row.Section_Image, dir_path)
+                
+                break
         
         elif answer == "N":
             pass
+    
+    while True:
+        print("\n--Do you want to retrieve gene_expression density for your csv file(s)? (Y/N): ")
+        answer = input().rstrip().upper()
+
+        if answer == "Y":
+            print("--Enter the directory path for the new chunk files ")
+            new_dir = input().rstrip()
+                
+            if not is_valid(dir_path):
+                image = Image()
+                image.create_file(csv_path, dir_path, new_dir, resolution=160)
+        
+        elif answer == "N":
+            pass
+        
+
+def image_to_ref() -> None:
+    pass
 
                 
 def main():

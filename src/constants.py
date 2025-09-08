@@ -14,6 +14,8 @@ CHUNK_HEADERS = ["Voxel", "Section_Image"]
 
 CHUNK_HEADERS_V2 = ["Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y"]
 
+CHUNK_HEADERS_V3 = ["Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y", "Gene_Expression"]
+
 DENSITY = 2500
 
 DISTRIBUTED = 259

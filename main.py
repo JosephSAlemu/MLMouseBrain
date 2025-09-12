@@ -1,9 +1,10 @@
-from src.constants import HEADERS, HEADERS_V2, HEADERS_V3
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4
 from src.enums.inequality import Inequality
 from scripts.script import file_to_list, strip_experiments
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.image import histogram, histogram_negative_distribution
+from src.image.newimage import Image
 from src.enums.actions import Action
 from src.enums.dimensions import Dimensions
 from src.analysis.kmeans import Kmeans
@@ -46,12 +47,18 @@ if __name__ == "__main__":
     #strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
     #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
 
-    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_50NewDens_match.csv", "Datasets/Outputs/p4_NewDens_match.csv")
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_50NewDens_match.csv", "Datasets/Outputs/p4_NewDens_match.csv", header_two=HEADERS_V2)
 
+    #util.file = "Datasets/Outputs/p4_NewDens_match.csv"
+    #util.distinct_structures("Datasets/Outputs/structure_occurences.txt")
     #visual = Visualize("Datasets/Outputs/p4_50NewDens_match.csv", HEADERS)
     #visual.histogram("log", "Expression Range", "Frequency", "Distribution of Voxel Gene Expressions", e_bins=True, right=True)
     #get_columns("Datasets/Outputs/P4_50_NewDenS.csv")
 
     #retrieve_section_id_from_gene("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt", "Bmp8a")
 
-    main()
+    #main()
+
+    image = Image()
+    path = input().rstrip()
+    image.draw_box(path)

@@ -3,11 +3,12 @@ class Box():
     A class that represents an nxn box around a seedpixel (x,y)
     '''
     def __init__(self, x: int, y: int, resolution: int):
-        self.create_box(x, y, resolution)
         self.x_min = None
         self.x_max = None
         self.y_min = None
         self.y_max = None
+        self.create_box(x, y, resolution)
+
 
     
     def create_box(self, x: int, y:int, resolution: int):

@@ -9,8 +9,8 @@ from collections import Counter, defaultdict
 from scipy.stats import zscore
 from src.enums.inequality import Inequality
 from src.enums.dimensions import Dimensions
-from src.constants import HEADERS, HEADERS_V2
-
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V4
+from collections import defaultdict
 
 class Utility():
     '''
@@ -187,11 +187,11 @@ class Utility():
         
         pass
 
-    def get_common_voxels_and_genes(self, other_path: str, new_path_one: str, new_path_two: str) -> None:
+    def get_common_voxels_and_genes(self, other_path: str, new_path_one: str, new_path_two: str, header_one: list[str] = HEADERS, header_two: list[str] = HEADERS) -> None:
         '''
         Finds the common voxel coordinates (X,Y,Z) and genes from both dataframes.
         
-        Creates Two New Dataframe of the common genes and voxels.
+        Creates a new dataframe with the gene density 
 
         Must have X,Y,Z columns in both dataframes.
         '''
@@ -205,9 +205,47 @@ class Utility():
         # Reminder to self, _x is left and _y is right
         match = df.merge(other_df, how = 'inner', left_on=["X", "Y", "Z"], right_on=["X", "Y", "Z"])
         
-        df_match = match[HEADERS + [gene for gene in match.columns if "_x" in gene]]  
-        other_match = match[HEADERS + [gene for gene in match.columns if "_y" in gene]]
+        df_match = match[header_one + [gene for gene in match.columns if "_x" in gene]]
+        other_match = match[header_two + [gene for gene in match.columns if "_y" in gene]]
+
+        df_match = df_match.rename(columns=lambda col: col.rstrip("_x"))
+        other_match = other_match.rename(columns=lambda col: col.rstrip("_y"))
 
         df_match.to_csv(new_path_one, index=False)
         other_match.to_csv(new_path_two, index=False)
+    
+    def distinct_structures(self, new_path: str) -> dict:
+        '''
+        Given a csv file that has a structure_name column, create a text file with the occurence of that structure
 
+        Args:
+            self.file = path of the csv file
+            new_path = path of the text file for the results
+
+        Returns:
+            None
+        '''
+        df = pd.read_csv(self.file)
+
+        structure_count = defaultdict(int)
+
+        for row in df.itertuples():
+            structure_count[row.structure_name] += 1
+        
+        with open(new_path, mode = "w") as file:
+            for key, value in structure_count.items():
+                file.write(f"{key} := {value}\n")
+
+    def plot_cluster_structures(self) -> None:
+        '''
+        Given a csv file that that a cluster_id column and a structure id
+
+        Args:
+            self.file = path of the csv file
+
+        Returns:
+            None
+        '''
+        pass
+
+    

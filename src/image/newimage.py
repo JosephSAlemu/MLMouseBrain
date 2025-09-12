@@ -4,20 +4,22 @@ import os
 import csv
 import numpy as np
 import pandas as pd
+from PIL import Image as pil, ImageDraw
 from src.constants import DENSITY, CHUNK_HEADERS_V3
 from src.voxel.voxel import Box
 from typing import NewType
+from src.utils.validation import is_valid
 
 class Image():
     def __init__(self):
         pass
 
-    def get_seed_voxels (self,) -> None:
+    def get_seed_voxels (self) -> None:
         '''
         Retrieves all the seed voxels
         '''
     
-    def measure_gene_expression_density(box: Box, section_img_path: str) -> int:
+    def measure_gene_expression_density(self, box: Box, section_img_path: str, density: int) -> int:
         '''
         measures the gene expression given a Box and a section_image
         '''
@@ -34,7 +36,7 @@ class Image():
 
         expressed_count = np.count_nonzero(expressed_mask)
 
-        gene_expression = expressed_count / DENSITY
+        gene_expression = expressed_count / (density*density)
         return gene_expression
     
 
@@ -55,7 +57,7 @@ class Image():
         Modify this method to change the chunk file in place
         '''
         df = pd.read_csv(chunk_path)
-        file_no = re.findall(r'\d+', chunk_path)
+        file_no = re.findall(r'\d+', chunk_path)[-1]
         file_name = f"{file_name}_{file_no}.csv"
         new_path = os.path.join(dir_path, file_name)
 
@@ -66,12 +68,17 @@ class Image():
                 box = Box(row.Seed_x, row.Seed_y, resolution)
                 section_img = f"{row.Section_Image}.jpg"
                 section_img_path = os.path.join(section_img_dir, section_img)
-                gene_density = self.measure_gene_expression_density(box, section_img_path)
+                gene_density = self.measure_gene_expression_density(box, section_img_path, resolution)
             
                 arr = list(row) + [gene_density]
                 writer.writerow(arr)
-                 
-
-
-
-
+    
+    def draw_box(self, section_image: str) -> None:
+        '''
+        Given a section image and coordinates, display an image 
+        '''
+        if not is_valid(section_image):
+            img = pil.open(section_image)
+            rect = ImageDraw.Draw(img)
+            rect.rectangle([(500, 500), (600, 600)], outline='red', width=3)
+            img.save("image.jpg")

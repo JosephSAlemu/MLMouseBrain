@@ -135,7 +135,6 @@ def image() -> None:
                 
             if not is_valid(dir_path):
                 response = multithread(csv_path)
-                print("idk")
 
                 if response is not None:
                     size, threads = response
@@ -148,7 +147,7 @@ def image() -> None:
                 break
         
         elif answer == "N":
-            pass
+            break
     
     while True:
         print("\n--Do you want to retrieve gene_expression density for your csv file(s)? (Y/N): ")
@@ -157,17 +156,26 @@ def image() -> None:
         if answer == "Y":
             print("--Enter the directory path for the new chunk files ")
             new_dir = input().rstrip()
+
+            if dir_path is None:
+                print("--Enter the directory path of the binarized images ")
+                dir_path = input().rstrip()
                 
-            if not is_valid(dir_path):
+            if not is_valid(new_dir) and not is_valid(dir_path):
                 image = Image()
                 image.create_file(csv_path, dir_path, new_dir, resolution=160)
         
         elif answer == "N":
-            pass
+            break
         
 
 def image_to_ref() -> None:
-    pass
+    csv_path = None
+    dir_path = None
+
+    
+
+
 
                 
 def main():

@@ -6,6 +6,8 @@ HEADERS_V2 = ["structure_id","structure_acronym","structure_name","voxRowNum","X
 
 HEADERS_V3 = ["structure_id","structure_acronym","structure_name","voxRowNum"]
 
+HEADERS_V4 = ["structure_id","X","Y","Z"]
+
 FILE_START = 1
 
 FILE_END = 9

@@ -2,11 +2,11 @@ SIZE = 1464
 
 HEADERS = ["X","Y","Z"]
 
-HEADERS_V2 = ["structure_id","structure_acronym","structure_name","voxRowNum","X","Y","Z"]
+HEADERS_V2 = ["Structure-ID","structure_acronym","structure_name","voxRowNum","X","Y","Z"]
 
-HEADERS_V3 = ["structure_id","structure_acronym","structure_name","voxRowNum"]
+HEADERS_V3 = ["Structure-ID","structure_acronym","structure_name","voxRowNum"]
 
-HEADERS_V4 = ["structure_id","X","Y","Z"]
+HEADERS_V4 = ["Structure-ID","X","Y","Z"]
 
 FILE_START = 1
 
@@ -17,6 +17,10 @@ CHUNK_HEADERS = ["Voxel", "Section_Image"]
 CHUNK_HEADERS_V2 = ["Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y"]
 
 CHUNK_HEADERS_V3 = ["Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y", "Gene_Expression"]
+
+CHUNK_HEADERS_V4 = ["Structure-ID", "Voxel_x", "Voxel_y", "Voxel_z", "Section_Dataset", "Section_Image", "Seed_x", "Seed_y"]
+
+CHUNK_HEADERS_V5 = ["Structure-ID", "Section_Image", "Seed_x", "Seed_y"]
 
 DENSITY = 2500
 

@@ -31,7 +31,7 @@ def split_section_ids(section_ids: list, chunk_size: int = 100) -> list[list]:
 
 def strip_experiments(file: str, new_path: str) -> None:
     '''
-    Strips the '-' and expirement numbers from gene names
+    Strips the '-' and section_dataset_ids numbers from gene names
     '''
     df = pd.read_csv(file)
 
@@ -39,6 +39,12 @@ def strip_experiments(file: str, new_path: str) -> None:
     df.columns = l
     print(df.columns)
     df.to_csv(new_path, index=False)
+
+def strip_gene(column: str):
+    '''
+    Strips the '-' and returns the gene name and section_dataset_id
+    '''
+    return column.rsplit("-", 1)[1]    
 
 def count_missing_expressions(file: str, missing: str) -> None:
     '''
@@ -68,6 +74,13 @@ def ccf_to_microns(mouse: int, x: int, y: int, z: int) -> list[int]:
     
     elif mouse == P56_MOUSE_REFERENCE_ID:
         return [x*P56_CONVERSION, y*P56_CONVERSION, z*P56_CONVERSION]
+    
+def microns_to_ccf(mouse: int, x: int, y: int) -> list[int]:
+    if mouse == P4_MOUSE_REFERENCE_ID:
+        return [x/P4_CONVERSION, y/P4_CONVERSION]
+    
+    elif mouse == P56_MOUSE_REFERENCE_ID:
+        return [x/P56_CONVERSION, y/P56_CONVERSION]
 
 def file_to_list(file: str, type: Callable[[str], Any] = str) -> list:
     '''

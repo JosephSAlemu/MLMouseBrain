@@ -10,6 +10,7 @@ from src.constants import AVAILABLE_MICE
 from src.utils.validation import is_valid
 from src.utils.filter import retrieve_section_id_from_gene
 from scripts.script import length, read
+from src.constants import HEADERS_V4
 
 def exit_program() -> None:
     exit(0)
@@ -93,7 +94,7 @@ def ref_to_image() -> None:
     response = multithread(csv_path)
     if response is not None:
         size, threads = response
-        use_threads(size, threads, None, AllenApi.start_ref_to_img, [csv_path, txt_path, dir_path])
+        use_threads(size, threads, None, AllenApi.start_ref_to_img, [csv_path, txt_path, dir_path, HEADERS_V4])
     else:
         AllenApi.start_ref_to_img(csv_path, txt_path, dir_path)
     

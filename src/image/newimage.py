@@ -73,11 +73,12 @@ class Image():
                 arr = list(row) + [gene_density]
                 writer.writerow(arr)
     
-    def draw_box(self, section_image: str) -> None:
+    def draw_box(self, x: int, y: int, section_image: str) -> None:
         '''
         Given a section image and coordinates, display an image 
         '''
         if not is_valid(section_image):
+            box = Box()
             img = pil.open(section_image)
             rect = ImageDraw.Draw(img)
             rect.rectangle([(500, 500), (600, 600)], outline='red', width=3)

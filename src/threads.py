@@ -42,9 +42,6 @@ class Threads:
     def threaded_func(self, func: Callable, args: list[Any]) -> None:
         func(*args, thread_chunk_size = (self.start, self.stop))
 
-
-
-
 def use_threads(length: int, thread_count: int, func: Action | None, caller: Callable, arguments: list[Any] | None, file: str|int = None) -> None:
     '''
     Takes in the laptop number according to the lab and then retrieves all the genes for it using threading.

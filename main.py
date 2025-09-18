@@ -10,8 +10,9 @@ from src.enums.dimensions import Dimensions
 from src.analysis.kmeans import Kmeans
 from src.api.newapi import Api
 from src.utils.visualize import Visualize
-from src.constants import P56_MOUSE_REFERENCE_ID
+from src.constants import P56_MOUSE_REFERENCE_ID, P4_MOUSE_REFERENCE_ID
 from src.pipeline import main
+from src.threads import use_threads
 
 import pandas as pd
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     #util.filter_all(Dimensions.BOTH, None, Inequality.LESS_THAN)
     #kmeans = Kmeans()
     #print(kmeans.elbow_plot(15))
-    #api = Api()
+    #api = Api(P4_MOUSE_REFERENCE_ID)
     #api.download_section_images()
     #util.substitute_voxels_gene_expressions("Datasets/Outputs/P4_Complete_Brain.csv")
 
@@ -57,8 +58,9 @@ if __name__ == "__main__":
 
     #retrieve_section_id_from_gene("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt", "Bmp8a")
 
-    #main()
+    main()
+    #api.query.reference_to_image()
+    #api.reference_to_image(57.0,29.0,18.0,[[38] ,[100144921]], "idk.csv")
 
-    image = Image()
-    path = input().rstrip()
-    image.draw_box(path)
+    #api.image_to_reference(101323144, 3323, 3008)
+

@@ -1,4 +1,5 @@
-import pandas as pd
+import os
+import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import accuracy_score
@@ -10,6 +11,7 @@ from scipy.stats import zscore
 from src.enums.inequality import Inequality
 from src.enums.dimensions import Dimensions
 from src.constants import HEADERS, HEADERS_V2, HEADERS_V4
+from scripts.script import list_files_in_dir, read
 from collections import defaultdict
 
 class Utility():
@@ -21,10 +23,10 @@ class Utility():
         pass
     
     def filter_genes(self, threshold: str | int | None, equality: Inequality, new_path: str) -> None:
-        #df = pd.read_csv(self.file)
+        #df = read(self.file)
         match equality:
             case Inequality.LESS_THAN:
-                df = pd.read_csv(self.file)
+                df = read(self.file)
                 gene_cols = df.columns.difference(HEADERS_V2)
 
                 mask = (df[gene_cols] == 0) | (df[gene_cols] == -1)
@@ -59,7 +61,7 @@ class Utility():
         '''
         match equality:
             case Inequality.LESS_THAN:
-                df = pd.read_csv(self.file)
+                df = read(self.file)
                 gene_cols = df.columns.difference(HEADERS)
 
                 mask = (df[gene_cols] == 0) | (df[gene_cols] == -1)
@@ -95,7 +97,7 @@ class Utility():
         '''
         values = None
         if coordinate == "X" or coordinate == "Y" or coordinate == "Z":
-            df = pd.read_csv(self.file)
+            df = read(self.file)
             values = list(set(df[coordinate].astype(float)))
             values.sort()
             my_dict = dict([(i,[]) for i in values])
@@ -109,6 +111,20 @@ class Utility():
             
         else:
             raise ValueError(f"invalid coordinate: {coordinate}")
+        
+    def merge_csv_files(self, dir_path: str, file_name: str) -> None:
+        
+        files = list_files_in_dir(dir_path)
+        new_path = os.path.join(dir_path, file_name)
+        headers = read(files[0]).columns
+
+        with open(new_path, "w",) as new_file:
+            writer = csv.writer(new_file)
+            writer.writerow(headers)
+            for file in files:
+                df = read(file)
+                for row in df.itertuples(index=False):
+                    writer.writerow(row)
     
     def z_score_normalize(self, col: str, new_path: str, ignore: list[str]) -> None:
         '''
@@ -118,7 +134,7 @@ class Utility():
         '''
         
 
-        df = pd.read_csv(self.file)
+        df = read(self.file)
         df.replace(-1, np.nan, inplace=True)
 
 
@@ -143,14 +159,14 @@ class Utility():
         '''
         Applies SimpleImputer transform and 
         '''
-        df = pd.read_csv(self.file)
+        df = read(self.file)
         imp = SimpleImputer(missing_values=np.nan, strategy= method)
         new_df = pd.DataFrame(imp.fit_transform(df))
         new_df.columns = df.columns
         new_df.to_csv(new_path, index=False)
 
     def knn_impute(self, n: int, new_path: str, ignore: list[str]) -> None:
-        df = pd.read_csv(self.file)
+        df = read(self.file)
         gene_cols = df.columns.difference(ignore)
         print(df[gene_cols])
         imputer = KNNImputer(n_neighbors=n)
@@ -161,7 +177,7 @@ class Utility():
         '''
         Prepares file for K-means clustering configurations set.
         '''
-        df = pd.read_csv(self.file)
+        df = read(self.file)
         gene_cols = df.columns.difference(ignore)
         cols = pd.Index(["X", "Y", "Z"]).append(gene_cols)
         df[cols].to_csv(new_path, index=False)
@@ -173,8 +189,8 @@ class Utility():
         Concats results from K-means clustering
         '''
         
-        df = pd.read_csv(self.file)
-        other_df = pd.read_csv(other_path)
+        df = read(self.file)
+        other_df = read(other_path)
         print(df[headers])
         print(other_df.iloc[:, 1:])
         merged_df = pd.concat([df[headers], other_df.iloc[:, 1:]], axis=1)
@@ -195,8 +211,8 @@ class Utility():
 
         Must have X,Y,Z columns in both dataframes.
         '''
-        df = pd.read_csv(self.file)
-        other_df = pd.read_csv(other_path)
+        df = read(self.file)
+        other_df = read(other_path)
         df[HEADERS] = df[HEADERS].astype(float)
         other_df[HEADERS] = other_df[HEADERS].astype(float)
 
@@ -225,7 +241,7 @@ class Utility():
         Returns:
             None
         '''
-        df = pd.read_csv(self.file)
+        df = read(self.file)
 
         structure_count = defaultdict(int)
 

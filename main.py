@@ -13,8 +13,7 @@ from src.utils.visualize import Visualize
 from src.constants import P56_MOUSE_REFERENCE_ID, P4_MOUSE_REFERENCE_ID
 from src.pipeline import main
 from src.threads import use_threads
-
-import pandas as pd
+import os
 
 
 if __name__ == "__main__":
@@ -35,7 +34,7 @@ if __name__ == "__main__":
     #util.filter_all(Dimensions.BOTH, None, Inequality.LESS_THAN)
     #kmeans = Kmeans()
     #print(kmeans.elbow_plot(15))
-    #api = Api(P4_MOUSE_REFERENCE_ID)
+    api = Api(P4_MOUSE_REFERENCE_ID)
     #api.download_section_images()
     #util.substitute_voxels_gene_expressions("Datasets/Outputs/P4_Complete_Brain.csv")
 
@@ -58,9 +57,15 @@ if __name__ == "__main__":
 
     #retrieve_section_id_from_gene("Datasets/Inputs/section_dataset_ids_reference_6_sagittal.txt", "Bmp8a")
 
-    main()
+    #main()
     #api.query.reference_to_image()
     #api.reference_to_image(57.0,29.0,18.0,[[38] ,[100144921]], "idk.csv")
 
     #api.image_to_reference(101323144, 3323, 3008)
 
+
+    directory_path = "Datasets/Outputs/AMDBAP4"
+    with os.scandir(directory_path) as dir:
+        for entry in dir:
+            if entry.is_file():
+                api.start_img_to_ref(entry.path, "Datasets/Outputs/AMDBAP4V", HEADERS_V4)

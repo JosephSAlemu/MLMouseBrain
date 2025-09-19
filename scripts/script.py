@@ -2,6 +2,9 @@ import pandas as pd
 
 from src.constants import HEADERS, P4_MOUSE_REFERENCE_ID, P56_MOUSE_REFERENCE_ID, P4_CONVERSION, P56_CONVERSION
 from typing import Callable, Any
+import re
+import os
+
 '''
 A file of commonly reusable scripts
 '''
@@ -40,11 +43,29 @@ def strip_experiments(file: str, new_path: str) -> None:
     print(df.columns)
     df.to_csv(new_path, index=False)
 
-def strip_gene(column: str):
+def strip_gene(column: str) -> list[str]:
     '''
     Strips the '-' and returns the gene name and section_dataset_id
     '''
-    return column.rsplit("-", 1)[1]    
+    return column.rsplit("-", 1)
+
+def get_file_number(path: str) -> int:
+    '''
+    For files with a singular, uninterrupted sequence of numbers.\n
+
+    If a file has a number following the name, read the number and return it.
+
+    Args:
+        path[str]: File path
+
+    Returns:
+        [int]: rightmost number in file 
+    '''
+
+    _, file = os.path.split(path)
+    print(file)
+    number = re.findall(r'\d+', file)[0]
+    return int(number)
 
 def count_missing_expressions(file: str, missing: str) -> None:
     '''
@@ -75,12 +96,19 @@ def ccf_to_microns(mouse: int, x: int, y: int, z: int) -> list[int]:
     elif mouse == P56_MOUSE_REFERENCE_ID:
         return [x*P56_CONVERSION, y*P56_CONVERSION, z*P56_CONVERSION]
     
-def microns_to_ccf(mouse: int, x: int, y: int) -> list[int]:
+def microns_to_ccf(mouse: int, x: int, y: int, z:int) -> list[int]:
+    '''
+    Based on the mouse, it converts ccf to microns and returns a list of X,Y,Z coordinates
+
+    [0] = X\n
+    [1] = Y\n
+    [2] = Z
+    '''
     if mouse == P4_MOUSE_REFERENCE_ID:
-        return [x/P4_CONVERSION, y/P4_CONVERSION]
+        return [x/P4_CONVERSION, y/P4_CONVERSION, z/P4_CONVERSION]
     
     elif mouse == P56_MOUSE_REFERENCE_ID:
-        return [x/P56_CONVERSION, y/P56_CONVERSION]
+        return [x/P56_CONVERSION, y/P56_CONVERSION, z/P56_CONVERSION]
 
 def file_to_list(file: str, type: Callable[[str], Any] = str) -> list:
     '''
@@ -92,6 +120,16 @@ def file_to_list(file: str, type: Callable[[str], Any] = str) -> list:
     arr = []
     with open(file, "r") as file:
         arr = [type(line) for line in file]
+    return arr
+
+def list_files_in_dir(dir_path: str) -> list[str]:
+    '''
+    Takes in a directory path and then returns a list of all the files
+    within the directory
+    '''
+    arr = []
+    with os.scandir(dir_path) as dir:
+        arr = [entry.path for entry in dir if entry.is_file()]
     return arr
 
 def length(file: str) -> int:

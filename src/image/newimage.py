@@ -42,7 +42,9 @@ class Image():
 
     def create_file(self, chunk_path: str, section_img_dir: str, dir_path: str, file_name: str = "mChunk", resolution: int = 50) -> None:
         '''
-        Measures and creates a new chunk file with the corresponding gene_expression measurement.
+        Takes in a chunk file (seed pixel and image) and a box size\n
+        Then measures gene_expression data from the data in the file\n
+        Finally, creates a new file with all the chunk file data plus the corresponding gene_expression measurement.\n
 
         Args:
           chunk_path: Chunk File Path

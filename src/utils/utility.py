@@ -1,7 +1,9 @@
 import os
 import csv
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from math import modf
 from sklearn.metrics import accuracy_score
 from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.model_selection import train_test_split
@@ -113,7 +115,9 @@ class Utility():
             raise ValueError(f"invalid coordinate: {coordinate}")
         
     def merge_csv_files(self, dir_path: str, file_name: str) -> None:
-        
+        '''
+        Merges all csv files in a directory
+        '''
         files = list_files_in_dir(dir_path)
         new_path = os.path.join(dir_path, file_name)
         headers = read(files[0]).columns
@@ -133,16 +137,9 @@ class Utility():
         This is to prevent seperate slices on the z axis when performing k-means clustering
         '''
         
-
         df = read(self.file)
         df.replace(-1, np.nan, inplace=True)
 
-
-        # Try imputing before z-score normalization.
-        """imputer = SimpleImputer(missing_values= np.nan, strategy="mean")
-        imputed = imputer.fit_transform(df)
-        df = pd.DataFrame(imputed, columns=df.columns)"""
-        
         
         gene_cols = df.columns.difference(ignore)
         
@@ -203,7 +200,7 @@ class Utility():
         
         pass
 
-    def get_common_voxels_and_genes(self, other_path: str, new_path_one: str, new_path_two: str, header_one: list[str] = HEADERS, header_two: list[str] = HEADERS) -> None:
+    def get_common_voxels_and_genes(self, other_path: str, new_path_one: str, new_path_two: str, headers: list[str] = HEADERS) -> None:
         '''
         Finds the common voxel coordinates (X,Y,Z) and genes from both dataframes.
         
@@ -213,16 +210,15 @@ class Utility():
         '''
         df = read(self.file)
         other_df = read(other_path)
-        df[HEADERS] = df[HEADERS].astype(float)
-        other_df[HEADERS] = other_df[HEADERS].astype(float)
+        if headers == HEADERS:
+            df[headers] = df[headers].astype(float)
+            other_df[headers] = other_df[headers].astype(float)
 
-        match = pd.DataFrame()
-
-        # Reminder to self, _x is left and _y is right
-        match = df.merge(other_df, how = 'inner', left_on=["X", "Y", "Z"], right_on=["X", "Y", "Z"])
+        # Reminder to self: _x is left and _y is right
+        match = df.merge(other_df, how = 'inner', left_on=headers, right_on=headers)
         
-        df_match = match[header_one + [gene for gene in match.columns if "_x" in gene]]
-        other_match = match[header_two + [gene for gene in match.columns if "_y" in gene]]
+        df_match = match[headers + [gene for gene in match.columns if "_x" in gene]]
+        other_match = match[headers + [gene for gene in match.columns if "_y" in gene]]
 
         df_match = df_match.rename(columns=lambda col: col.rstrip("_x"))
         other_match = other_match.rename(columns=lambda col: col.rstrip("_y"))
@@ -264,4 +260,55 @@ class Utility():
         '''
         pass
 
-    
+    def bin_voxels(self, dir_path: str, file_path: str) -> None:
+        '''
+        Takes in a gene name as a string.
+
+        Opens the file and retrieves the voxels.
+
+        Bin all the voxels in all the files in the genes they belong to.
+
+        Bins are a 9x9 grid based on the x and y value.
+
+                           ___________
+                n.0-n.33  |___|___|___|
+      (X Coord) n.34-n.66 |___|___|___|
+                n.67-n.99 |___|___|___|
+                          n.0  n.34 n.67 
+                           -    -    -
+                          n.33 n.66 n.69
+                            (Y Coord)
+
+        ALSO binned on the rounded z coordinate binned
+            
+        '''
+        new_path = os.path.join(dir_path, file_path)
+
+        df = read(self.file)
+        with open(new_path, "w") as new_file:
+            writer = csv.writer(new_file)
+            writer.writerow(df.columns)
+            df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+
+            for row in df.itertuples():
+                x = float(row.X)
+                y = float(row.Y)
+                z = float(row.Z)
+                x_rem, x_num = modf(x)
+                y_rem, y_num = modf(y)
+                                    
+                if x_rem >= .34 and x_rem < .67:
+                    x_num = x_num+.34
+                
+                elif x_rem >= .67:
+                    x_num = x_num+.67
+
+                elif y_rem >= .34 and y_rem <.67:
+                    y_num = y_num+.34
+                                
+                elif y_rem >= .67:
+                    y_num = y_num + .67
+                
+                z_num = round(z)
+
+                writer.writerow([row.structure, x_num, y_num, z_num])

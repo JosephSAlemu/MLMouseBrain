@@ -142,3 +142,4 @@ def length(file: str) -> int:
 
 def read(file: str) -> pd.DataFrame:
     return pd.read_csv(file)
+

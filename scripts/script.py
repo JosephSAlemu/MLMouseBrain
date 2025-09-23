@@ -141,5 +141,26 @@ def length(file: str) -> int:
     return len(pd.read_csv(file))
 
 def read(file: str) -> pd.DataFrame:
-    return pd.read_csv(file)
+    if file:
+        return pd.read_csv(file)
+    print("Enter a Non-None file")
 
+def drop_columns(file:str, cols: list[str], invert: bool) -> pd.DataFrame:
+    '''
+    Drops columns.
+
+    Args:
+        file: path to csv file
+        cols: the list of columns you want to drop
+
+    Returns:
+        Dataframe with columns dropped if cols isn't None
+    '''
+    df = read(file)
+    if cols:
+        if invert:
+            cols = df.columns.difference(cols)
+        
+        df.drop(columns=cols, inplace=True)
+
+    return df

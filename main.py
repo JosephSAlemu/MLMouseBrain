@@ -13,8 +13,6 @@ from src.utils.visualize import Visualize
 from src.constants import P56_MOUSE_REFERENCE_ID, P4_MOUSE_REFERENCE_ID
 from src.pipeline import main
 from src.threads import use_threads
-import os
-
 
 if __name__ == "__main__":
     #util = Utility()
@@ -34,20 +32,19 @@ if __name__ == "__main__":
     #util.filter_all(Dimensions.BOTH, None, Inequality.LESS_THAN)
     #kmeans = Kmeans()
     #print(kmeans.elbow_plot(15))
-    api = Api(P4_MOUSE_REFERENCE_ID)
+    #api = Api(P4_MOUSE_REFERENCE_ID)
     #api.download_section_images()
     #util.substitute_voxels_gene_expressions("Datasets/Outputs/P4_Complete_Brain.csv")
 
     #histogram_negative_distribution(Action.GENES, False, "Datasets/Outputs/P4_Brainstem_15.csv")
     #drop_rows()
     
-    #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
+    #util = Utility("Datasets/Outputs/AMDBAP4V/rounded_merged.csv")
     #util.impute("mean", "Datasets/Outputs/P4_50_IM_NewDenS.csv")
 
-    #strip_experiments("Datasets/Outputs/p4_NewDenS.csv", "Datasets/Outputs/p4_NewDenS_NEX.csv")
-    #util = Utility("Datasets/Outputs/P4_50_NewDenS.csv")
+    util = Utility("Datasets/Outputs/p4_Complete_Brain_structure_match.csv")
 
-    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_NewDenS_NEX.csv", "Datasets/Outputs/p4_50NewDens_match.csv", "Datasets/Outputs/p4_NewDens_match.csv", header_two=HEADERS_V2)
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_match.csv", df_drop_other=HEADERS_V3, new_path="Datasets/Outputs/P4_P56_structure_match.csv")
 
     #util.file = "Datasets/Outputs/p4_NewDens_match.csv"
     #util.distinct_structures("Datasets/Outputs/structure_occurences.txt")
@@ -63,9 +60,4 @@ if __name__ == "__main__":
 
     #api.image_to_reference(101323144, 3323, 3008)
 
-
-    directory_path = "Datasets/Outputs/AMDBAP4"
-    with os.scandir(directory_path) as dir:
-        for entry in dir:
-            if entry.is_file():
-                api.start_img_to_ref(entry.path, "Datasets/Outputs/AMDBAP4V", HEADERS_V4)
+    util.attach_structure_ids("Datasets/Outputs/P4_P56_structure_match.csv", "Datasets/Outputs/p4_Complete_Brain_structure_match.csv")

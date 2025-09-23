@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import os
 import json
 import csv
@@ -8,6 +9,7 @@ import ast
 from statistics import stdev
 from src.constants import (HEADERS, DISTRIBUTED, FILE_START, FILE_END)
 from src.enums.actions import Action
+from scripts.script import read
 
 # filters out the p4 complete brain (structures and genes) and gets only the brainstem
 def filter_p4_data() -> None:
@@ -692,4 +694,11 @@ def drop_rows() -> None:
     df = pd.read_csv("Datasets/Outputs/P4_Brainstem_15.csv")
     df = df.drop(columns=["structure_id","structure_acronym","structure_name","voxRowNum"])
     df.to_csv("Datasets/Outputs/P4_Brainstem_15_D.csv", index=False)
+
+def merge_voxel_files(path: str, new) -> None:
+    directory_path = "Datasets/Outputs/AMDBAP4"
+    with os.scandir(directory_path) as dir:
+        for entry in dir:
+            if entry.is_file():
+                api.start_img_to_ref(entry.path, "Datasets/Outputs/AMDBAP4V", HEADERS_V4)
 

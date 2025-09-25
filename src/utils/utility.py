@@ -18,48 +18,33 @@ from collections import defaultdict
 
 
 class Utility:
-    """
+    '''
     Class that holds functions that perform data filtering, feature reduction, plotting etc.
-    """
+    '''
 
     def __init__(self, file: str = None):
         self.file = file
         pass
 
     def filter_genes(
-        self, threshold: str | int | None, equality: Inequality, new_path: str
+        self, 
+        threshold: float,
+        headers: list[str]
     ) -> None:
-        # df = read(self.file)
-        match equality:
-            case Inequality.LESS_THAN:
-                df = read(self.file)
-                gene_cols = df.columns.difference(HEADERS_V2)
+        '''
+        Default threshold is -1
 
-                mask = (df[gene_cols] == 0) | (df[gene_cols] == -1)
+        You can pass a threshold value
+        '''
+        df = read(self.file)
+        temp = df.drop(columns = headers)
+        columns = list(temp.columns)
 
-                bad_ratio_col = mask.sum(axis=0) / df.shape[0]
+        for col in temp.columns:
+            if (temp[col] == -1).all() or (temp[col] < threshold).all():
+                columns.remove(col)
 
-                clean_gene_cols = bad_ratio_col[
-                    bad_ratio_col < threshold
-                ].index.tolist()
-                final_cols = HEADERS_V2 + clean_gene_cols
-
-                df_clean = df[final_cols].copy()
-
-                # Final result
-                df_clean.to_csv(new_path, index=False)
-
-            case Inequality.GREATER_THAN:
-                print(Inequality.GREATER_THAN)
-
-            case Inequality.LESS_THAN_EQUAL:
-                print(Inequality.LESS_THAN_EQUAL)
-
-            case Inequality.GREATER_THAN_EQUAL:
-                print(Inequality.GREATER_THAN_EQUAL)
-
-            case Inequality.EQUAL_TO:
-                print(Inequality.EQUAL_TO)
+        print(df[columns])        
 
     def filter_voxels_and_genes(
         self,
@@ -276,7 +261,7 @@ class Utility:
         Given a csv file that has a structure_name column, create a text file with the occurence of that structure
 
         Args:
-            self.file = path of the csv file
+            self.file: path of the csv file
             new_path = path of the text file for the results
 
         Returns:
@@ -286,8 +271,12 @@ class Utility:
 
         structure_count = defaultdict(int)
 
+        df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+
         for row in df.itertuples():
-            structure_count[row.structure_name] += 1
+            if pd.notna(row.structure):
+                structure = int(row.structure)
+                structure_count[structure] += 1
 
         with open(new_path, mode="w") as file:
             for key, value in structure_count.items():
@@ -347,33 +336,20 @@ class Utility:
 
                 writer.writerow([row.structure, x_num, y_num, z_num])
 
-    def attach_structure_ids(self, other_path: str, new_path: str) -> None:
+    def separate_null_rows(self, new_path: str, other_new_path: str) -> None:
         '''
-        Assuming the df is the dataframe that needs the structure id's attached, the other_df is the file that adds the structure id.
+        This method takes in a dataframe
 
-        Assume other_df's X,Y,Z coordinates are a subset of the df's X,Y,Z
-
+        Args:
+            self.file: path to csv file
+            new_path: path of the file with null rows
+            other_new_path: path of the file with the non-null rows
         '''
+
         df = read(self.file)
-        other_df = read(other_path)
 
-        df["Structure-ID"] = np.nan
-        other_df.rename(columns={"Structure-ID": "structure"}, inplace=True)
 
-        
-        for row in other_df.itertuples():
-            j = (df['X'] == row.X) & (df['Y'] == row.Y) & (df['Z'] == row.Z)
-            df.loc[j, "Structure-ID"] = row.structure
-        
-        df.to_csv(new_path, index=False)
+        df[df['Structure-ID'].isnull()].to_csv(new_path, index=False)
+        df[df['Structure-ID'].notna()].to_csv(other_new_path, index=False)
 
-    def separate_null_rows(self, new_path: str) -> None:
-        '''
-        Takes in a dataframe and separate and appends the rows with a null value into a new dataframe.
 
-        The method then saves the new dataframe to the path provided
-        '''
-
-        df = read(new_path)
-
-        print(df[df.isnull().any(axis=1)])

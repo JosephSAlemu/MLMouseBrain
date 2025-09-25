@@ -44,6 +44,7 @@ if __name__ == "__main__":
 
     util = Utility("Datasets/Outputs/p4_Complete_Brain_structure_match.csv")
 
+
     #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_match.csv", df_drop_other=HEADERS_V3, new_path="Datasets/Outputs/P4_P56_structure_match.csv")
 
     #util.file = "Datasets/Outputs/p4_NewDens_match.csv"
@@ -60,4 +61,11 @@ if __name__ == "__main__":
 
     #api.image_to_reference(101323144, 3323, 3008)
 
-    util.attach_structure_ids("Datasets/Outputs/P4_P56_structure_match.csv", "Datasets/Outputs/p4_Complete_Brain_structure_match.csv")
+    #util.separate_null_rows("Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Null.csv", "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null.csv")
+
+    #util.distinct_structures("Datasets/Outputs/AMDBAP4Visuals/Complete_Distribution.txt")
+
+    util.file = "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null.csv"
+
+    util.filter_genes(0.001, HEADERS_V2)
+    

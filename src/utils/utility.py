@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from joblib import Parallel, delayed
 from math import modf
 from sklearn.metrics import accuracy_score
 from sklearn.impute import KNNImputer, SimpleImputer
@@ -29,7 +30,8 @@ class Utility:
     def filter_genes(
         self, 
         threshold: float,
-        headers: list[str]
+        headers: list[str],
+        new_path: str = None
     ) -> None:
         '''
         Default threshold is -1
@@ -43,8 +45,11 @@ class Utility:
         for col in temp.columns:
             if (temp[col] == -1).all() or (temp[col] < threshold).all():
                 columns.remove(col)
+    
+        print(df[headers+columns])
 
-        print(df[columns])        
+        if new_path:
+            df[headers+columns].to_csv(new_path, index=False)
 
     def filter_voxels_and_genes(
         self,
@@ -133,11 +138,16 @@ class Utility:
                     writer.writerow(row)
 
     def z_score_normalize(self, col: str, new_path: str, ignore: list[str]) -> None:
-        """
+        '''
         Applies z-score normalization on each z coordinate, grouping each voxel by their z coordinate for the normalization.
 
         This is to prevent seperate slices on the z axis when performing k-means clustering
-        """
+
+        Args:
+            self.file: 
+            col: the axis you want to z-score normalize on (ex: "Z")
+            new_path: path of the new 
+        '''
 
         df = read(self.file)
         df.replace(-1, np.nan, inplace=True)
@@ -146,10 +156,8 @@ class Utility:
 
         values = df[col].unique()
         for value in values:
-            print(df.loc[df[col] == value, gene_cols])
             temp = df.loc[df[col] == value, gene_cols]
             df.loc[df[col] == value, gene_cols] = (temp - temp.mean()) / temp.std()
-            print(df.loc[df[col] == value, gene_cols])
 
         df.to_csv(new_path, index=False)
 
@@ -214,7 +222,7 @@ class Utility:
         invert: bool = False,
         invert_other: bool = False,
     ) -> None:
-        """
+        '''
         Finds the common voxel coordinates (X,Y,Z) and genes from both dataframes.
 
         Creates a new dataframe with the gene density
@@ -228,7 +236,7 @@ class Utility:
 
         Returns:
             None
-        """
+        '''
         
         df = drop_columns(self.file, df_drop, invert)
         other_df = drop_columns(other_path, df_drop_other, invert_other)
@@ -256,8 +264,8 @@ class Utility:
         else:
             print(match)
         
-    def distinct_structures(self, new_path: str) -> dict:
-        """
+    def distinct_structures(self, new_path: str = None) -> None:
+        '''
         Given a csv file that has a structure_name column, create a text file with the occurence of that structure
 
         Args:
@@ -266,7 +274,7 @@ class Utility:
 
         Returns:
             None
-        """
+        '''
         df = read(self.file)
 
         structure_count = defaultdict(int)
@@ -278,9 +286,11 @@ class Utility:
                 structure = int(row.structure)
                 structure_count[structure] += 1
 
-        with open(new_path, mode="w") as file:
-            for key, value in structure_count.items():
-                file.write(f"{key} := {value}\n")
+        print(structure_count)
+        if new_path:
+            with open(new_path, mode="w") as file:
+                for key, value in structure_count.items():
+                    file.write(f"{key} := {value}\n")
 
     def plot_cluster_structures(self) -> None:
         """

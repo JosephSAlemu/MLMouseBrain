@@ -143,7 +143,7 @@ def length(file: str) -> int:
 def read(file: str) -> pd.DataFrame:
     if file:
         return pd.read_csv(file)
-    print("Enter a Non-None file")
+    print("Enter a file")
 
 def drop_columns(file:str, cols: list[str], invert: bool) -> pd.DataFrame:
     '''

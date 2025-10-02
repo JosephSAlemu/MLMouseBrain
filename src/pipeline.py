@@ -9,8 +9,9 @@ from src.image.newimage import Image
 from src.constants import AVAILABLE_MICE
 from src.utils.validation import is_valid
 from src.utils.filter import retrieve_section_id_from_gene
-from scripts.script import length, read
-from src.constants import HEADERS_V4
+from scripts.script import length, read, list_files_in_dir
+from src.constants import HEADERS_V4, CHUNK_HEADERS_V4
+from src.utils.validation import path_exists
 
 def exit_program() -> None:
     exit(0)
@@ -62,23 +63,15 @@ def ref_to_image() -> None:
         if not is_valid(csv_path):
             break
 
+    
+    print("\n--Ensure you have a TXT file of section_dataset_ids--\n")
     while True:
-        print("\n--Do you have a TXT file of section_dataset_ids? (Y/N): ")
-        answer = input().rstrip().upper()
-
-        if answer == "Y":
-            print("--Enter your TXT file: ")
-            txt_path = input().rstrip()
+        print("--Enter your TXT file path: ")
+        txt_path = input().rstrip()
                 
-            if not is_valid(txt_path):
-                break
+        if not is_valid(txt_path):
+            break
         
-        elif answer == "N":
-            print("--Enter a TXT file path for your section_dataset_ids: ")
-            txt_path = input().rstrip()
-            if is_valid(txt_path):
-                # Implement
-                pass
 
     AllenApi.mouse = print_constants(
         "Here are the available mice",
@@ -94,10 +87,9 @@ def ref_to_image() -> None:
     response = multithread(csv_path)
     if response is not None:
         size, threads = response
-        use_threads(size, threads, None, AllenApi.start_ref_to_img, [csv_path, txt_path, dir_path, HEADERS_V4])
+        use_threads(size, threads, None, AllenApi.start_ref_to_img, [csv_path, txt_path, dir_path, CHUNK_HEADERS_V4])
     else:
         AllenApi.start_ref_to_img(csv_path, txt_path, dir_path)
-    
     
 def image() -> None:
     '''
@@ -169,16 +161,38 @@ def image() -> None:
         elif answer == "N":
             break
         
-
 def image_to_ref() -> None:
     csv_path = None
     dir_path = None
 
+    while True:
+        print("\n--Do you want to convert all chunks or one chunk? (ALL/ONE): ")
+        answer = input().rstrip().upper()
+        if answer == "ALL":
+            print("--Enter the directory path for the chunk files: ")
+            dir_path = input().rstrip()
+                
+        elif answer == "ONE":
+            print("--Enter the file path for the chunk: ")
+            csv_path = input().rstrip()
+
+                
+        if path_exists(dir_path) or path_exists(csv_path):
+            break
+    
+    files = None
+    if dir_path:
+        files = list_files_in_dir(dir_path)
+
+    else:
+        files = [csv_path]
+    
     
 
 
 
-                
+
+         
 def main():
     print("Starting...\n")
 

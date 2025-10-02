@@ -11,8 +11,8 @@ from typing import NewType
 from src.utils.validation import is_valid
 
 class Image():
-    def __init__(self):
-        pass
+    def __init__(self, file):
+        self.file = file
 
     def get_seed_voxels (self) -> None:
         '''
@@ -75,13 +75,14 @@ class Image():
                 arr = list(row) + [gene_density]
                 writer.writerow(arr)
     
-    def draw_box(self, x: int, y: int, section_image: str) -> None:
+    def draw_box(self, x: int, y: int, resolution: int) -> None:
         '''
         Given a section image and coordinates, display an image 
         '''
-        if not is_valid(section_image):
-            box = Box()
-            img = pil.open(section_image)
+        if not is_valid(self.file):
+            box = Box(x,y,resolution)
+            img = pil.open(self.file)
             rect = ImageDraw.Draw(img)
-            rect.rectangle([(500, 500), (600, 600)], outline='red', width=3)
+            print(box)
+            rect.rectangle([(box.x_min, box.y_min), (box.x_max, box.y_max)], outline='red', width=10)
             img.save("image.jpg")

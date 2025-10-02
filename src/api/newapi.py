@@ -43,9 +43,9 @@ class Api:
         thread_chunk_size: tuple = None,
         file_name: str = "Chunk",
     ) -> None:
-        """
+        '''
         Given the voxel path, section_id, path, and the file_name call reference_to_image()
-        """
+        '''
         self.query.reference_to_image()
 
         section_ids = file_to_list(section_ids_path, int)
@@ -82,9 +82,9 @@ class Api:
         thread_chunk_size: tuple = None,
         file_name: str = "Voxel",
     ) -> None:
-        """
+        '''
         Given the voxel path, section_id, path, and the file_name call image_to_reference()
-        """
+        '''
         self.query.image_to_reference()
 
         df = read(chunk_path)
@@ -97,23 +97,26 @@ class Api:
 
         if headers == HEADERS_V4:
             df.rename(columns={"Structure-ID": "structure"}, inplace=True)
-            for row in df.itertuples():
-                new_path = f"{full_path}_{get_file_number(chunk_path)}.csv"
-                self.image_to_reference(
-                    row.Section_Image,
-                    row.Seed_x,
-                    row.Seed_y,
-                    headers,
-                    new_path,
-                    row.structure,
-                )
+            new_path = f"{full_path}_{get_file_number(chunk_path)}.csv"
+            with open(new_path, mode="w", newline="") as new_file:
+                writer = csv.writer(new_file)
+                writer.writerow(headers)
+
+                for row in df.itertuples():
+                    self.image_to_reference(
+                        row.Section_Image,
+                        row.Seed_x,
+                        row.Seed_y,
+                        writer,
+                        row.structure,
+                    )
 
     def start_download_binarized(
         self, voxels_path: str, dir_path: str, thread_chunk_size: tuple = None
     ) -> None:
-        """
+        '''
         Given the voxel path, section_id, path, and the file_name call download_binarized_image()
-        """
+        '''
         df = read(voxels_path)
         if thread_chunk_size is not None:
             start, stop = thread_chunk_size
@@ -132,11 +135,11 @@ class Api:
         new_path: str,
         structure_id: int = None,
     ) -> None:
-        """
+        '''
         Reference-To-Image call based on Allen Mouse Developing Brain Atlas (AMDBA).
 
         Converts from the mouse reference space to the target images for the section data sets
-        """
+        '''
         m_X, m_Y, m_Z = ccf_to_microns(self.mouse, X, Y,Z)
 
         if not chunk_exists(new_path, len(section_ids)):
@@ -155,7 +158,6 @@ class Api:
                         Z=m_Z,
                         image_ids=images,
                     )
-
                     response = requests.get(query)
 
                     if response.status_code == 200:
@@ -181,36 +183,32 @@ class Api:
         section_image_id: int,
         X: int,
         Y: int,
-        headers: list[str],
-        new_path: str,
+        writer: str,
         structure_id: int = None,
     ) -> tuple | None:
-        """
+        '''
         Image-To-Reference call based on Allen Mouse Developing Brain Atlas (AMDBA).
 
         Converts from section image, x coordinate, and y coordinate to voxel coordinates in the mouse reference space
-        """
-        if not path_exists(new_path):
-            with open(new_path, mode="w", newline="") as new_file:
-                writer = csv.writer(new_file)
-                writer.writerow(headers)
-                query = self.query.url
-                query = query.format(
-                    section_image_id=section_image_id, x_coord=X, y_coord=Y
-                )
-                response = requests.get(query)
-                if response.status_code == 200:
-                    data = response.json()["msg"]["image_to_reference"]
-                    x,y,z = microns_to_ccf(self.mouse, int(data["x"]),int(data["y"]), int(data["z"]))
-                    arr = [structure_id, x, y, z]
-                    writer.writerow(arr)
-                else:
-                    print(f"ISSUE WITH QUERY {query}")
+        '''
+
+        query = self.query.url
+        query = query.format(
+            section_image_id=section_image_id, x_coord=X, y_coord=Y
+        )
+        response = requests.get(query)
+        if response.status_code == 200:
+            data = response.json()["msg"]["image_to_reference"]
+            x,y,z = microns_to_ccf(self.mouse, int(data["x"]),int(data["y"]), int(data["z"]))
+            arr = [structure_id, x, y, z]
+            writer.writerow(arr)
+        else:
+            print(f"ISSUE WITH QUERY {query}")
 
     def download_binarized_image(self, section_image_id: int, dir_path: str) -> None:
-        """
+        '''
         Given a section_image_id and the directory you want to save the image to, the function downloads a binarized version of the section_image
-        """
+        '''
         self.query.binarized_section_image()
         query = self.query.url.format(image_id=section_image_id)
 

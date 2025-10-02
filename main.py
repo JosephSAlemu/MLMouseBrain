@@ -42,8 +42,7 @@ if __name__ == "__main__":
     #util = Utility("Datasets/Outputs/AMDBAP4V/rounded_merged.csv")
     #util.impute("mean", "Datasets/Outputs/P4_50_IM_NewDenS.csv")
 
-    util = Utility("Datasets/Outputs/p4_Complete_Brain_structure_match.csv")
-
+    #util = Utility("Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null_Filtered.csv")
 
     #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_match.csv", df_drop_other=HEADERS_V3, new_path="Datasets/Outputs/P4_P56_structure_match.csv")
 
@@ -65,7 +64,22 @@ if __name__ == "__main__":
 
     #util.distinct_structures("Datasets/Outputs/AMDBAP4Visuals/Complete_Distribution.txt")
 
-    util.file = "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null.csv"
+    #util.file = "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null.csv"
 
-    util.filter_genes(0.001, HEADERS_V2)
-    
+    #util.filter_genes(0.001, HEADERS_V2, "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null_Filtered.csv")
+
+    #util.z_score_normalize("Z", "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null_Filtered_ZNRM.csv", HEADERS_V2)
+
+    #util.file = "Datasets/Outputs/AMDBAP4Visuals/P4_Complete_Brain_structure_Not_Null_Filtered_ZNRM.csv"
+    #for i in range(4,11):
+        #util.knn_impute(i, f"Datasets/Outputs/knn/n_{i}.csv", HEADERS_V2)
+
+    #img = Image("Datasets/Section_ISH/101302614.jpg")
+
+    #img.draw_box(5000,5000, 500)
+
+    #main()
+
+    #api = Api(P4_MOUSE_REFERENCE_ID)
+
+    #api.start_img_to_ref("Datasets/Outputs/AMDBAP417/Chunk_0.csv", "Datasets/Outputs/AMDBAP417V", HEADERS_V4)

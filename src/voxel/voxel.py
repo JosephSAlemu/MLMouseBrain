@@ -15,3 +15,6 @@ class Box():
         size = resolution//2
         self.x_min, self.x_max = x-size, x+size
         self.y_min, self.y_max = y-size, y+size
+
+    def __str__(self):
+        return f"x_min: {self.x_min}\nx_max: {self.x_max}\ny_min: {self.y_min}\ny_max: {self.y_max}\n"

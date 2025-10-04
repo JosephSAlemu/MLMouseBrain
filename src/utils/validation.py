@@ -1,5 +1,5 @@
 import os
-from scripts.script import read
+from scripts.script import length
 
 def is_valid_image(path: str) -> bool:
     '''
@@ -61,10 +61,9 @@ def chunk_exists(path: str, expected_size: int) -> bool | str:
     False = modify or create
     '''
     
-    if os.path.exists(path):
-        temp = read(path)
-        length = len(temp)
-        if length != expected_size:
+    if os.path.exists(path) and os.path.getsize(path) > 0:
+        lngth = length(path)
+        if lngth != expected_size:
             print(f"{path} exists but incomplete")
             os.remove(rf"{path}")
             return False

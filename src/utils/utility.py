@@ -3,6 +3,7 @@ import csv
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import random
 from joblib import Parallel, delayed
 from math import modf
 from sklearn.metrics import accuracy_score
@@ -245,7 +246,7 @@ class Utility:
         other_df[HEADERS] = other_df[HEADERS].astype(float)
 
         # Reminder to self: _x is left and _y is right
-        match = df.merge(other_df, how="inner", left_on=headers, right_on=headers, indicator=True)
+        match = df.merge(other_df, how="inner", left_on=headers, right_on=headers)
 
         
         if new_path and new_path_other:
@@ -255,8 +256,10 @@ class Utility:
             df_match = df_match.rename(columns=lambda col: col.rstrip("_x"))
             other_match = other_match.rename(columns=lambda col: col.rstrip("_y"))
 
-            df_match.to_csv(new_path, index=False)
-            other_match.to_csv(new_path_other, index=False)
+            print(df_match)
+            print(other_match)
+            #df_match.to_csv(new_path, index=False)
+            #other_match.to_csv(new_path_other, index=False)
         
         elif new_path:
             match.to_csv(new_path, index=False)
@@ -326,6 +329,12 @@ class Utility:
           ALSO binned on the rounded z coordinate binned
 
         """
+        pass
+
+    def round_voxels(self, dir_path: str, file_path: str) -> None:
+        '''
+        Rounds voxels.
+        '''
         new_path = os.path.join(dir_path, file_path)
 
         df = read(self.file)
@@ -348,12 +357,17 @@ class Utility:
 
     def separate_null_rows(self, new_path: str, other_new_path: str) -> None:
         '''
-        This method takes in a dataframe
+        This method takes in a dataframe\n
+        and splits rows into two dataframes\n 
+        by null and not null Structure-IDs
 
         Args:
             self.file: path to csv file
             new_path: path of the file with null rows
             other_new_path: path of the file with the non-null rows
+        
+        Returns:
+            SideEffect: Creates two dataframe: one with no Structure-IDs and one with Structure-IDs
         '''
 
         df = read(self.file)
@@ -362,4 +376,62 @@ class Utility:
         df[df['Structure-ID'].isnull()].to_csv(new_path, index=False)
         df[df['Structure-ID'].notna()].to_csv(other_new_path, index=False)
 
+    def check_conflicting_voxel_structures(self, new_path: str = None):
+        '''
+        Checks if a dataframe has the same voxel with different Structure-IDs associated with it.
 
+        Args:
+            self.file: path to csv file
+            new_path: path of file to save results
+        '''
+        
+        df = read(self.file)
+        df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+
+        frequency = {}
+        for row in df.itertuples():
+            key = (row.X, row.Y, row.Z)
+            id = row.structure
+            if key not in frequency:
+                frequency[key] = {}
+
+            if id not in frequency[key]:
+                frequency[key][id] = 0
+            
+            frequency[key][id] += 1
+
+        if new_path:
+            #with open(new_path, "w") as file:
+            for key, value in frequency.items():
+                #file.write(f"{key}:\n   {value}\n")
+                if len(value) > 1:
+                    print(f"{key}:\n   {value}\n")
+        else:
+            return frequency
+
+    
+    def pick_random_structure(self, new_path):
+
+        frequency = self.check_conflicting_voxel_structures()
+        df = read(self.file)
+        df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+
+        with open(new_path, "w") as file:
+            writer = csv.writer(file)
+            writer.writerow(df)
+            for key, value in frequency.items():
+                print(f"{key}:\n   {value}\n")
+                count = 0
+                top = None
+                temp = []
+                for struct, val in value.items():
+                    if val > count:
+                        count = val
+                        top = struct
+                        temp.clear()
+                        temp.append(top)
+                    elif val == count:
+                        temp.append(struct)
+                        top = random.choice(temp)
+                x,y,z = key
+                writer.writerow([top, x, y, z])

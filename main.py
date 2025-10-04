@@ -1,6 +1,6 @@
 from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4
 from src.enums.inequality import Inequality
-from scripts.script import file_to_list, strip_experiments
+from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.image import histogram, histogram_negative_distribution
@@ -15,7 +15,7 @@ from src.pipeline import main
 from src.threads import use_threads
 
 if __name__ == "__main__":
-    #util = Utility()
+    util = Utility()
     #util.filter_column("idk", None, Inequality.LESS_THAN)
     #histogram_negative_distribution(Action.GENES, False)
     #util = Utility("Datasets/Outputs/P4_Brainstem_15.csv")
@@ -83,3 +83,49 @@ if __name__ == "__main__":
     #api = Api(P4_MOUSE_REFERENCE_ID)
 
     #api.start_img_to_ref("Datasets/Outputs/AMDBAP417/Chunk_0.csv", "Datasets/Outputs/AMDBAP417V", HEADERS_V4)
+
+    #util = Utility()
+
+    #util.merge_csv_files("Datasets/Outputs/AMDBATestV", "merged.csv")
+
+    #util.file = "Datasets/Outputs/AMDBATestV/merged.csv"
+
+    #util.round_voxels("Datasets/Outputs/AMDBATestV", "rounded_merged.csv")
+
+    #util.file = "Datasets/Outputs/AMDBATestV/rounded_merged_dupes_dropped.csv"
+
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_NEX.csv", "Datasets/Outputs/P4_Complete_Brain_10Sets.csv")
+
+    #util.file = "Datasets/Outputs/Pipeline/P4_50_Complete_Brain_10Sets.csv"
+
+    #util.filter_genes(0.001, HEADERS_V4, "Datasets/Outputs/Pipeline/P4_50_CB_10S_F.csv")
+
+    #util.file = "Datasets/Outputs/Pipeline/P4_Complete_Brain_10Sets.csv"
+
+    #util.filter_genes(0.001, HEADERS_V2, "Datasets/Outputs/Pipeline/P4_CB_10S_F.csv")
+    
+    #util.file = "Datasets/Outputs/Pipeline/P4_50_CB_10S_F.csv"
+
+    #util.z_score_normalize("Z", "Datasets/Outputs/Pipeline/P4_50_CB_10S_F_Z.csv", HEADERS_V4)
+
+    #util.file = "Datasets/Outputs/Pipeline/P4_CB_10S_F.csv"
+
+    #util.z_score_normalize("Z", "Datasets/Outputs/Pipeline/P4_CB_10S_F_Z.csv", HEADERS_V2)
+
+
+    #util.file = "Datasets/Outputs/Pipeline/P4_CB_10S_F_Z.csv"
+    #for i in range(1,11):
+        #util.knn_impute(i, f"Datasets/Outputs/knn/10set/base/n_{i}.csv", HEADERS_V2)
+
+    util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
+
+    util.check_conflicting_voxel_structures("skds")
+    #util.pick_random_structure("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv")
+    #main()
+
+    #util = Utility()
+    #util.merge_csv_files("Datasets/Outputs/AMDBAP411/Voxels", "merged.csv")
+    #util.file = "Datasets/Outputs/AMDBAP411/Voxels/merged.csv"
+    #util.round_voxels("Datasets/Outputs/AMDBAP411/Voxels", "rounded_merged.csv")
+
+    #drop_duplicates("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged.csv", "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv")

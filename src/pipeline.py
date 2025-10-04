@@ -16,12 +16,16 @@ from src.utils.validation import path_exists
 def exit_program() -> None:
     exit(0)
 
-def multithread(csv_path: str) -> tuple | None:
+def multithread(path: str) -> tuple | None:
     while True:
         print("--Do you want to multithread the call? (Y/N): ")
         answer = input().rstrip().upper()
         if answer == "Y":
-            size = length(csv_path)
+            size = None
+            if os.path.isdir(path):
+                size = len(list_files_in_dir(path))
+            else:
+                size = length(path)
             while True:
                 print(f"--How many threads do you want? (Must be a factor of {size}): ")
                 threads = input().rstrip()
@@ -162,36 +166,44 @@ def image() -> None:
             break
         
 def image_to_ref() -> None:
-    csv_path = None
-    dir_path = None
-
+    AllenApi = Api()
+    path = None
     while True:
         print("\n--Do you want to convert all chunks or one chunk? (ALL/ONE): ")
         answer = input().rstrip().upper()
         if answer == "ALL":
             print("--Enter the directory path for the chunk files: ")
-            dir_path = input().rstrip()
+            path = input().rstrip()
                 
         elif answer == "ONE":
             print("--Enter the file path for the chunk: ")
-            csv_path = input().rstrip()
+            path = input().rstrip()
 
                 
-        if path_exists(dir_path) or path_exists(csv_path):
+        if path_exists(path):
             break
     
-    files = None
-    if dir_path:
-        files = list_files_in_dir(dir_path)
+    print("--Enter the directory you want to save the files in: ")
+    dir_path = input().rstrip()
+    if is_valid(dir_path):
+        os.mkdir(dir_path)
+    
+    AllenApi.mouse = print_constants(
+        "Here are the available mice",
+        AVAILABLE_MICE,
+        "Which mouse do you want?"
+    )
+    
+    response = multithread(path)
 
+    if os.path.isdir(path):
+        path = list_files_in_dir(path)
+
+    if response is not None:
+        size, threads = response
+        use_threads(size, threads, None, AllenApi.start_img_to_ref, [path, dir_path, HEADERS_V4])
     else:
-        files = [csv_path]
-    
-    
-
-
-
-
+        pass
          
 def main():
     print("Starting...\n")

@@ -164,3 +164,14 @@ def drop_columns(file:str, cols: list[str], invert: bool) -> pd.DataFrame:
         df.drop(columns=cols, inplace=True)
 
     return df
+
+def drop_duplicates(file: str, new_path: str) -> None:
+    '''
+    Given a file path and a new path, drop the duplicates rows\n
+    and save to the new path.
+    '''
+    df = read(file)
+
+    df.drop_duplicates(inplace=True)
+
+    df.to_csv(new_path, index=False)

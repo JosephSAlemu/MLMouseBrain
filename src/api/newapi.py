@@ -22,6 +22,8 @@ from scripts.script import (
     ccf_to_microns,
     microns_to_ccf,
     read,
+    length,
+    list_files_in_dir
 )
 
 
@@ -76,7 +78,7 @@ class Api:
 
     def start_img_to_ref(
         self,
-        chunk_path: str,
+        chunk_arr: str,
         dir_path: str,
         headers: list[str],
         thread_chunk_size: tuple = None,
@@ -87,29 +89,31 @@ class Api:
         '''
         self.query.image_to_reference()
 
-        df = read(chunk_path)
-
         if thread_chunk_size is not None:
             start, stop = thread_chunk_size
-            df = df.iloc[start:stop]
+            chunk_arr = chunk_arr[start:stop]
 
         full_path = os.path.join(dir_path, file_name)
 
         if headers == HEADERS_V4:
-            df.rename(columns={"Structure-ID": "structure"}, inplace=True)
-            new_path = f"{full_path}_{get_file_number(chunk_path)}.csv"
-            with open(new_path, mode="w", newline="") as new_file:
-                writer = csv.writer(new_file)
-                writer.writerow(headers)
+            for chunk_path in chunk_arr:
+                df = read(chunk_path)
+                df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+                new_path = f"{full_path}_{get_file_number(chunk_path)}.csv"
+                lngth = length(chunk_path)
+                if not chunk_exists(new_path,lngth):
+                    with open(new_path, mode="w", newline="") as new_file:
+                        writer = csv.writer(new_file)
+                        writer.writerow(headers)
 
-                for row in df.itertuples():
-                    self.image_to_reference(
-                        row.Section_Image,
-                        row.Seed_x,
-                        row.Seed_y,
-                        writer,
-                        row.structure,
-                    )
+                        for row in df.itertuples():
+                            self.image_to_reference(
+                                row.Section_Image,
+                                row.Seed_x,
+                                row.Seed_y,
+                                writer,
+                                row.structure,
+                            )
 
     def start_download_binarized(
         self, voxels_path: str, dir_path: str, thread_chunk_size: tuple = None

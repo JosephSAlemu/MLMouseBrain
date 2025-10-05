@@ -1,6 +1,7 @@
-from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4
+import os
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4, HEADERS_V5
 from src.enums.inequality import Inequality
-from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates
+from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates, split_file
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.image import histogram, histogram_negative_distribution
@@ -117,9 +118,9 @@ if __name__ == "__main__":
     #for i in range(1,11):
         #util.knn_impute(i, f"Datasets/Outputs/knn/10set/base/n_{i}.csv", HEADERS_V2)
 
-    util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
+    #util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
 
-    util.check_conflicting_voxel_structures("skds")
+    #util.check_conflicting_voxel_structures("skds")
     #util.pick_random_structure("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv")
     #main()
 
@@ -128,4 +129,25 @@ if __name__ == "__main__":
     #util.file = "Datasets/Outputs/AMDBAP411/Voxels/merged.csv"
     #util.round_voxels("Datasets/Outputs/AMDBAP411/Voxels", "rounded_merged.csv")
 
-    #drop_duplicates("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged.csv", "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv")
+    drop_duplicates("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged.csv", "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv")
+    
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_NEX.csv", "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_11Sets.csv", df_drop_other=["structure_id","structure_acronym","structure_name"])
+
+    #util.file = "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_11Sets.csv"
+
+    #util.filter_genes(0.001, HEADERS_V5, "Datasets/Outputs/AMDBAP411/Pipeline/P4_CB_11S_F.csv")
+        
+    #util.file = "Datasets/Outputs/AMDBAP411/Pipeline/P4_CB_11S_F.csv"
+
+    #util.z_score_normalize("Z", "Datasets/Outputs/AMDBAP411/Pipeline/P4_CB_11S_F_Z.csv", HEADERS_V5)
+
+    #util.file = "Datasets/Outputs/AMDBAP411/Pipeline/P4_CB_11S_F_Z.csv"
+    #for i in range(1,11):
+        #util.knn_impute(i, f"Datasets/Outputs/knn/11set/n_{i}.csv", HEADERS_V5)
+
+    #visual = Visualize(file="Datasets/Outputs/AMDBAP411/Cluster/n_1_13cluster.csv")
+
+    #visual.idk()
+
+    #main()
+

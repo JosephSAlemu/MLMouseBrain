@@ -244,7 +244,7 @@ class Utility:
 
         df[HEADERS] = df[HEADERS].astype(float)
         other_df[HEADERS] = other_df[HEADERS].astype(float)
-
+        
         # Reminder to self: _x is left and _y is right
         match = df.merge(other_df, how="inner", left_on=headers, right_on=headers)
 
@@ -353,7 +353,7 @@ class Utility:
 
                 z_num = round(z)
 
-                writer.writerow([row.structure, x_num, y_num, z_num])
+                writer.writerow([row.structure, row.Section_Dataset , x_num, y_num, z_num])
 
     def separate_null_rows(self, new_path: str, other_new_path: str) -> None:
         '''
@@ -376,7 +376,7 @@ class Utility:
         df[df['Structure-ID'].isnull()].to_csv(new_path, index=False)
         df[df['Structure-ID'].notna()].to_csv(other_new_path, index=False)
 
-    def check_conflicting_voxel_structures(self, new_path: str = None):
+    def check_conflicting_voxel_structures(self, new_path: str = None) -> dict[dict[int]]:
         '''
         Checks if a dataframe has the same voxel with different Structure-IDs associated with it.
 
@@ -410,11 +410,10 @@ class Utility:
             return frequency
 
     
-    def pick_random_structure(self, new_path):
+    def pick_random_structure(self, new_path) -> None:
 
         frequency = self.check_conflicting_voxel_structures()
         df = read(self.file)
-        df.rename(columns={"Structure-ID": "structure"}, inplace=True)
 
         with open(new_path, "w") as file:
             writer = csv.writer(file)
@@ -435,3 +434,5 @@ class Utility:
                         top = random.choice(temp)
                 x,y,z = key
                 writer.writerow([top, x, y, z])
+    
+    

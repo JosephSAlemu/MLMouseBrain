@@ -8,6 +8,10 @@ HEADERS_V3 = ["Structure-ID","structure_acronym","structure_name","voxRowNum"]
 
 HEADERS_V4 = ["Structure-ID","X","Y","Z"]
 
+HEADERS_V5 =["Structure-ID","X","Y","Z", "voxRowNum"]
+
+HEADERS_V6 = ["Structure-ID", "Section_Dataset", "X","Y","Z"]
+
 FILE_START = 1
 
 FILE_END = 9

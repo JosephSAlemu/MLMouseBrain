@@ -1,7 +1,9 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 from collections.abc import Callable
 from src.constants import HEADERS
+from scripts.script import read
 
 class Visualize():
     '''
@@ -87,3 +89,47 @@ class Visualize():
 
 
         return counts
+
+    def idk(self):
+
+        # Load CSV
+        df = read(self.file)
+
+        # --- 1. Compute structure centroids and voxel counts ---
+        structure_stats = df.groupby("Structure-ID").agg({
+            "X": "mean",
+            "Y": "mean",
+            "voxRowNum": "count"   # number of voxels
+        }).reset_index()
+        structure_stats.rename(columns={"voxRowNum": "voxel_count"}, inplace=True)
+
+        # --- 2. Compute cluster centroids ---
+        cluster_stats = df.groupby("Cluster_13").agg({
+            "X": "mean",
+            "Y": "mean"
+        }).reset_index()
+
+        # --- 3. Plot ---
+        plt.figure(figsize=(8, 6))
+
+        # Assign a unique color to each structure
+        colors = plt.cm.tab20(np.linspace(0, 1, len(structure_stats)))
+
+        # Plot each structure centroid
+        for i, row in structure_stats.iterrows():
+            plt.scatter(row["X"], row["Y"],
+                        s=row["voxel_count"]*0.01,  # scale size to voxel count
+                        color=colors[i],
+                        alpha=0.6,
+                        label=f"Structure {int(row['Structure-ID'])}")
+
+        # Plot cluster centroids
+        plt.scatter(cluster_stats["X"], cluster_stats["Y"],
+                    c="black", marker="x", s=100, label="Cluster Centers")
+
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.title("Structure Centroids with Cluster Centers")
+        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=8)
+        plt.tight_layout()
+        plt.show()

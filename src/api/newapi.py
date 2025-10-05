@@ -7,6 +7,7 @@ from src.constants import (
     P56_MOUSE_REFERENCE_ID,
     CHUNK_HEADERS,
     HEADERS_V4,
+    HEADERS_V6,
     CHUNK_HEADERS_V2,
     CHUNK_HEADERS_V4,
     P4_CONVERSION,
@@ -114,6 +115,28 @@ class Api:
                                 writer,
                                 row.structure,
                             )
+        
+        if headers == HEADERS_V6:
+            for chunk_path in chunk_arr:
+                df = read(chunk_path)
+                df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+                new_path = f"{full_path}_{get_file_number(chunk_path)}.csv"
+                lngth = length(chunk_path)
+                if not chunk_exists(new_path,lngth):
+                    with open(new_path, mode="w", newline="") as new_file:
+                        writer = csv.writer(new_file)
+                        writer.writerow(headers)
+
+                        for row in df.itertuples():
+                            self.image_to_reference(
+                                row.Section_Image,
+                                row.Seed_x,
+                                row.Seed_y,
+                                writer,
+                                row.structure,
+                                section_dataset=row.Section_Dataset
+                            )
+
 
     def start_download_binarized(
         self, voxels_path: str, dir_path: str, thread_chunk_size: tuple = None
@@ -189,6 +212,7 @@ class Api:
         Y: int,
         writer: str,
         structure_id: int = None,
+        section_dataset: int = None
     ) -> tuple | None:
         '''
         Image-To-Reference call based on Allen Mouse Developing Brain Atlas (AMDBA).
@@ -204,7 +228,11 @@ class Api:
         if response.status_code == 200:
             data = response.json()["msg"]["image_to_reference"]
             x,y,z = microns_to_ccf(self.mouse, int(data["x"]),int(data["y"]), int(data["z"]))
-            arr = [structure_id, x, y, z]
+            arr = None
+            if section_dataset:
+                arr = [structure_id, section_dataset ,x, y, z]
+            else:
+                arr = [structure_id, x, y, z]
             writer.writerow(arr)
         else:
             print(f"ISSUE WITH QUERY {query}")

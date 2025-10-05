@@ -10,7 +10,7 @@ from src.constants import AVAILABLE_MICE
 from src.utils.validation import is_valid
 from src.utils.filter import retrieve_section_id_from_gene
 from scripts.script import length, read, list_files_in_dir
-from src.constants import HEADERS_V4, CHUNK_HEADERS_V4
+from src.constants import HEADERS_V4, CHUNK_HEADERS_V4, HEADERS_V6
 from src.utils.validation import path_exists
 
 def exit_program() -> None:
@@ -201,7 +201,7 @@ def image_to_ref() -> None:
 
     if response is not None:
         size, threads = response
-        use_threads(size, threads, None, AllenApi.start_img_to_ref, [path, dir_path, HEADERS_V4])
+        use_threads(size, threads, None, AllenApi.start_img_to_ref, [path, dir_path, HEADERS_V6])
     else:
         pass
          

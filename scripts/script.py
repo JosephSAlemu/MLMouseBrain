@@ -175,3 +175,22 @@ def drop_duplicates(file: str, new_path: str) -> None:
     df.drop_duplicates(inplace=True)
 
     df.to_csv(new_path, index=False)
+
+def split_file(txt_file: str, dir_path: str) -> None:
+    '''
+    '''
+    file = open(txt_file, "r")
+    common = ["Chunk", "Pipeline", "Voxels"]
+    os.mkdir(dir_path)
+    for dataset in file:
+        dataset = str(dataset)
+        new_dir = os.path.join(dir_path, dataset)
+        os.mkdir(new_dir)
+        for dir in common:
+            sub_dir = os.path.join(new_dir, dir)
+            os.mkdir(sub_dir)
+        
+        new_path = os.path.join(new_dir, dataset)
+        with open(new_path + ".txt", "w") as new_file:
+            new_file.write(dataset)
+    file.close()

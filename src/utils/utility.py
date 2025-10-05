@@ -409,30 +409,12 @@ class Utility:
         else:
             return frequency
 
-    
-    def pick_random_structure(self, new_path) -> None:
-
-        frequency = self.check_conflicting_voxel_structures()
+    def create_unique_section_id_dataframe(self, dir_path) -> None:
         df = read(self.file)
+        for section, sub_df in df.groupby("Section_Dataset"):
+            filename = os.path.join(dir_path, f"{section}.csv")
+            sub_df.to_csv(filename, index=False)
+            print(f"Saved {filename}")
 
-        with open(new_path, "w") as file:
-            writer = csv.writer(file)
-            writer.writerow(df)
-            for key, value in frequency.items():
-                print(f"{key}:\n   {value}\n")
-                count = 0
-                top = None
-                temp = []
-                for struct, val in value.items():
-                    if val > count:
-                        count = val
-                        top = struct
-                        temp.clear()
-                        temp.append(top)
-                    elif val == count:
-                        temp.append(struct)
-                        top = random.choice(temp)
-                x,y,z = key
-                writer.writerow([top, x, y, z])
     
     

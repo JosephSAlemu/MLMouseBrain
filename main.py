@@ -1,7 +1,7 @@
 import os
 from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4, HEADERS_V5
 from src.enums.inequality import Inequality
-from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates, split_file
+from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates, split_file, read
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.image import histogram, histogram_negative_distribution
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     #util.file = "Datasets/Outputs/AMDBAP411/Voxels/merged.csv"
     #util.round_voxels("Datasets/Outputs/AMDBAP411/Voxels", "rounded_merged.csv")
 
-    drop_duplicates("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged.csv", "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv")
+    #drop_duplicates("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged.csv", "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv")
     
     #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_NEX.csv", "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_11Sets.csv", df_drop_other=["structure_id","structure_acronym","structure_name"])
 
@@ -150,4 +150,14 @@ if __name__ == "__main__":
     #visual.idk()
 
     #main()
+
+
+    files = list_files_in_dir("Datasets/Outputs/AMDBAP411/Dataframes/Intersection")
+    for file in files:
+        filename = os.path.splitext(os.path.basename(file))[0]
+        df = read(file)
+        temp = df["Z"].unique()
+        temp = temp.tolist()
+        temp.sort()
+        print(f"{filename}: {temp} {df.shape}")
 

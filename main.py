@@ -17,6 +17,7 @@ from src.threads import use_threads
 
 if __name__ == "__main__":
     util = Utility()
+    visual = Visualize()
     #util.filter_column("idk", None, Inequality.LESS_THAN)
     #histogram_negative_distribution(Action.GENES, False)
     #util = Utility("Datasets/Outputs/P4_Brainstem_15.csv")
@@ -176,5 +177,8 @@ if __name__ == "__main__":
 
     #for i in range(1,11):
     #    util.knn_impute(i, f"Datasets/Outputs/knn/1set/100091964/n_{i}.csv", HEADERS_V7)
-    util.file = "Datasets/Outputs/knn/1set/100091964/n_1.csv"
-    util.distinct_structures("Datasets/Outputs/AMDBAP411/Cluster/100091964/distribution.txt")
+    #util.file = "Datasets/Outputs/knn/1set/100091964/n_1.csv"
+    #util.distinct_structures("Datasets/Outputs/AMDBAP411/Cluster/100091964/distribution.txt")
+
+    visual.file = "C:/Users/JALEMU/Downloads/n_1_13cluster.csv"
+    visual.idk()

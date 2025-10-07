@@ -60,3 +60,19 @@ STRUCTURE_ID_ABBREVIATIONS = {
     307: "MARN",
     1048: "GRN"
 }
+
+STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS = {
+    136: "#f26460",   
+    143: "#c9dbfb",   
+    235: "#98d494",   
+    307: "#f9e285",   
+    661: "#f4a3a3",   
+    773: "#faae85",   
+    852: "#a4e1e0",   
+    939: "#f9e285", 
+    970: "#86b6f2",   
+    978: "#f98c45",   
+    1048: "#c9dbfb",  
+    1098: "#98d494",  
+    1107: "#a4e1e0",  
+}

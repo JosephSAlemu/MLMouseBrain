@@ -1,5 +1,5 @@
 import os
-from scripts.script import length
+from scripts.script import length, read
 
 def is_valid_image(path: str) -> bool:
     '''

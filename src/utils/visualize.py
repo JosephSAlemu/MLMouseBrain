@@ -1,8 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.lines as mlines
+
 import pandas as pd
 from collections.abc import Callable
-from src.constants import HEADERS
+from src.constants import HEADERS, STRUCTURE_ID_ABBREVIATIONS, STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS
 from scripts.script import read
 
 class Visualize():
@@ -92,7 +94,6 @@ class Visualize():
 
     def idk(self):
 
-        # Load CSV
         df = read(self.file)
 
         structure_stats = df.groupby("Structure-ID").agg({
@@ -107,23 +108,47 @@ class Visualize():
             "Y": "mean"
         }).reset_index()
 
+        desired_order =  [136, 143, 307, 661, 773, 852, 939, 970, 978, 1048, 1098, 1107]
+
+        structure_stats["sort_key"] = structure_stats["Structure-ID"].apply(lambda x: desired_order.index(x))
+        df_sorted = structure_stats.sort_values("sort_key").drop(columns="sort_key").reset_index(drop=True)
         plt.figure(figsize=(8, 6))
 
-        colors = plt.cm.tab20(np.linspace(0, 1, len(structure_stats)))
-
-        for i, row in structure_stats.iterrows():
+        for _, row in df_sorted.iterrows():
             plt.scatter(row["X"], row["Y"],
-                        s=row["voxel_count"],  # scale size to voxel count
-                        color=colors[i],
+                        s=row["voxel_count"],
+                        color=STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS[row["Structure-ID"]],
                         alpha=0.6,
-                        label=f"Structure {int(row['Structure-ID'])}")
-
+                        label=f"Structure {STRUCTURE_ID_ABBREVIATIONS[row['Structure-ID']]}")
+            
         plt.scatter(cluster_stats["X"], cluster_stats["Y"],
                     c="black", marker=".", s=100, label="Cluster Centers")
+
+        for _, row in cluster_stats.iterrows():
+            plt.text(row["X"] + 0.1, row["Y"] - 0.1, int(row["Cluster_13"]), fontsize=9, ha='left', va='top')
 
         plt.xlabel("X")
         plt.ylabel("Y")
         plt.title("Structure Centroids with Cluster Centers")
-        plt.legend(bbox_to_anchor=(1.05, 1), loc="upper left", fontsize=8)
+        handles = [
+            mlines.Line2D([], [], 
+                        color=STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS[sid],
+                        marker='o', linestyle='None', markersize=8,
+                        label=STRUCTURE_ID_ABBREVIATIONS[sid])
+            for sid in desired_order
+        ]
+        handles.append(
+            mlines.Line2D([], [], 
+                        color='black', marker='o', linestyle='None', markersize=8,
+                        label='Cluster Centers')
+        )
+        plt.legend(
+            handles=handles,
+            bbox_to_anchor=(1.05, 1),
+            loc="upper left",
+            fontsize=8,
+            title="Structures",
+            borderaxespad=0.
+        )
         plt.tight_layout()
         plt.show()

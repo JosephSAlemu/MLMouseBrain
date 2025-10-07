@@ -95,37 +95,31 @@ class Visualize():
         # Load CSV
         df = read(self.file)
 
-        # --- 1. Compute structure centroids and voxel counts ---
         structure_stats = df.groupby("Structure-ID").agg({
             "X": "mean",
             "Y": "mean",
-            "voxRowNum": "count"   # number of voxels
+            "voxRowNum": "count"
         }).reset_index()
         structure_stats.rename(columns={"voxRowNum": "voxel_count"}, inplace=True)
 
-        # --- 2. Compute cluster centroids ---
         cluster_stats = df.groupby("Cluster_13").agg({
             "X": "mean",
             "Y": "mean"
         }).reset_index()
 
-        # --- 3. Plot ---
         plt.figure(figsize=(8, 6))
 
-        # Assign a unique color to each structure
         colors = plt.cm.tab20(np.linspace(0, 1, len(structure_stats)))
 
-        # Plot each structure centroid
         for i, row in structure_stats.iterrows():
             plt.scatter(row["X"], row["Y"],
-                        s=row["voxel_count"]*0.01,  # scale size to voxel count
+                        s=row["voxel_count"],  # scale size to voxel count
                         color=colors[i],
                         alpha=0.6,
                         label=f"Structure {int(row['Structure-ID'])}")
 
-        # Plot cluster centroids
         plt.scatter(cluster_stats["X"], cluster_stats["Y"],
-                    c="black", marker="x", s=100, label="Cluster Centers")
+                    c="black", marker=".", s=100, label="Cluster Centers")
 
         plt.xlabel("X")
         plt.ylabel("Y")

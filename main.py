@@ -1,7 +1,7 @@
 import os
-from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4, HEADERS_V5
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V3, HEADERS_V4, HEADERS_V5, HEADERS_V6, HEADERS_V7
 from src.enums.inequality import Inequality
-from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates, split_file, read
+from scripts.script import file_to_list, strip_experiments, list_files_in_dir, drop_duplicates, split_file, read, drop_columns
 from src.utils.utility import Utility
 from src.utils.filter import drop_rows, missing_and_empty_distributions_voxels, missing_and_empty_distributions_genes, retrieve_section_id_from_gene
 from src.image.image import histogram, histogram_negative_distribution
@@ -145,19 +145,36 @@ if __name__ == "__main__":
     #for i in range(1,11):
         #util.knn_impute(i, f"Datasets/Outputs/knn/11set/n_{i}.csv", HEADERS_V5)
 
-    #visual = Visualize(file="Datasets/Outputs/AMDBAP411/Cluster/n_1_13cluster.csv")
+    #visual = Visualize(file="Datasets/Outputs/AMDBAP411/Cluster/100091964/n_1_13cluster.csv")
 
     #visual.idk()
 
     #main()
 
 
-    files = list_files_in_dir("Datasets/Outputs/AMDBAP411/Dataframes/Intersection")
-    for file in files:
-        filename = os.path.splitext(os.path.basename(file))[0]
-        df = read(file)
-        temp = df["Z"].unique()
-        temp = temp.tolist()
-        temp.sort()
-        print(f"{filename}: {temp} {df.shape}")
+    #files = list_files_in_dir("Datasets/Outputs/AMDBAP411/Dataframes/Intersection")
+    #for file in files:
+    #    filename = os.path.splitext(os.path.basename(file))[0]
+    #    df = read(file)
+    #    temp = df["Z"].unique()
+    #    temp = temp.tolist()
+    #    temp.sort()
+    #    print(f"{filename}: {temp} {df.shape}")
+    #    df = drop_columns(file, ["structure_id","structure_acronym","structure_name"])
+    #    df.to_csv(file, index=False)
+    #    
 
+    #util.file = "Datasets/Outputs/AMDBAP411/Dataframes/Intersection/100091964.csv"
+
+    #util.filter_genes(0.001, HEADERS_V7, "Datasets/Outputs/AMDBAP411/Pipeline/100091964/P4_CB_F.csv")
+    
+    #util.file = "Datasets/Outputs/AMDBAP411/Pipeline/100091964/P4_CB_F.csv"
+
+    #util.z_score_normalize("Z", "Datasets/Outputs/AMDBAP411/Pipeline/100091964/P4_CB_F_Z.csv", HEADERS_V7)
+
+    #util.file = "Datasets/Outputs/AMDBAP411/Pipeline/100091964/P4_CB_F_Z.csv"
+
+    #for i in range(1,11):
+    #    util.knn_impute(i, f"Datasets/Outputs/knn/1set/100091964/n_{i}.csv", HEADERS_V7)
+    util.file = "Datasets/Outputs/knn/1set/100091964/n_1.csv"
+    util.distinct_structures("Datasets/Outputs/AMDBAP411/Cluster/100091964/distribution.txt")

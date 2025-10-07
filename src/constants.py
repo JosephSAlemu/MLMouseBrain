@@ -12,6 +12,8 @@ HEADERS_V5 =["Structure-ID","X","Y","Z", "voxRowNum"]
 
 HEADERS_V6 = ["Structure-ID", "Section_Dataset", "X","Y","Z"]
 
+HEADERS_V7 = ["Structure-ID", "Section_Dataset", "X","Y","Z", "voxRowNum"]
+
 FILE_START = 1
 
 FILE_END = 9
@@ -41,4 +43,20 @@ P56_CONVERSION = 200
 AVAILABLE_MICE = {
     "From P56 Mouse to Other Mouse": P56_MOUSE_REFERENCE_ID,
     "From P4 Mouse to Other Mouse": P4_MOUSE_REFERENCE_ID
+}
+
+STRUCTURE_ID_ABBREVIATIONS = {
+    773: "XII",
+    136: "IRN",
+    1098: "MDRNd",
+    939: "AMBd",
+    970: "PGRNd",
+    235: "LRN",
+    143: "AMBv",
+    978: "PGRNl",
+    1107: "MDRNv",
+    852: "PARN",
+    661: "VII",
+    307: "MARN",
+    1048: "GRN"
 }

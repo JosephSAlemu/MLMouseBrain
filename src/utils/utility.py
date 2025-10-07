@@ -14,7 +14,7 @@ from collections import Counter, defaultdict
 from scipy.stats import zscore
 from src.enums.inequality import Inequality
 from src.enums.dimensions import Dimensions
-from src.constants import HEADERS, HEADERS_V2, HEADERS_V4
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V4, STRUCTURE_ID_ABBREVIATIONS
 from scripts.script import list_files_in_dir, read, drop_columns
 from collections import defaultdict
 
@@ -42,8 +42,9 @@ class Utility:
         df = read(self.file)
         temp = df.drop(columns = headers)
         columns = list(temp.columns)
-
+        
         for col in temp.columns:
+            print(temp[col])
             if (temp[col] == -1).all() or (temp[col] < threshold).all():
                 columns.remove(col)
     
@@ -280,20 +281,16 @@ class Utility:
         '''
         df = read(self.file)
 
-        structure_count = defaultdict(int)
 
-        df.rename(columns={"Structure-ID": "structure"}, inplace=True)
+        #df.rename(columns={"Structure-ID": "structure"}, inplace=True)
 
-        for row in df.itertuples():
-            if pd.notna(row.structure):
-                structure = int(row.structure)
-                structure_count[structure] += 1
+        count = df["structure_names"].value_counts()
 
-        print(structure_count)
         if new_path:
-            with open(new_path, mode="w") as file:
-                for key, value in structure_count.items():
-                    file.write(f"{key} := {value}\n")
+            with open(new_path, "w") as newfile:
+                newfile.write(count.to_string())
+        else: 
+            print(count)
 
     def plot_cluster_structures(self) -> None:
         """
@@ -416,5 +413,34 @@ class Utility:
             sub_df.to_csv(filename, index=False)
             print(f"Saved {filename}")
 
-    
+    def add_structures_name(self) -> None:
+        df = read(self.file)
+        df["structure_names"] = df["Structure-ID"].map(STRUCTURE_ID_ABBREVIATIONS)
+        #print(df[["Structure-ID", "structure_names"]])
+        df.to_csv(self.file, index=False)
+
+    def pick_random_structure(self, new_path) -> None:
+
+        frequency = self.check_conflicting_voxel_structures()
+        df = read(self.file)
+
+        with open(new_path, "w") as file:
+            writer = csv.writer(file)
+            writer.writerow(df)
+            for key, value in frequency.items():
+                print(f"{key}:\n   {value}\n")
+                count = 0
+                top = None
+                temp = []
+                for struct, val in value.items():
+                    if val > count:
+                        count = val
+                        top = struct
+                        temp.clear()
+                        temp.append(top)
+                    elif val == count:
+                        temp.append(struct)
+                        top = random.choice(temp)
+                x,y,z = key
+                writer.writerow([top, x, y, z])
     

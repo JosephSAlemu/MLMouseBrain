@@ -145,7 +145,7 @@ def read(file: str) -> pd.DataFrame:
         return pd.read_csv(file)
     print("Enter a file")
 
-def drop_columns(file:str, cols: list[str], invert: bool) -> pd.DataFrame:
+def drop_columns(file:str, cols: list[str], invert: bool = False) -> pd.DataFrame:
     '''
     Drops columns.
 

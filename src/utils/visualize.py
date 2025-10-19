@@ -92,7 +92,7 @@ class Visualize():
 
         return counts
 
-    def idk(self):
+    def cluster_structure_analysis(self):
 
         df = read(self.file)
 

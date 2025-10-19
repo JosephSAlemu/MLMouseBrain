@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import random
 from joblib import Parallel, delayed
 from math import modf
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, adjusted_rand_score, adjusted_mutual_info_score
 from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.model_selection import train_test_split
 from collections.abc import Callable
@@ -267,7 +267,41 @@ class Utility:
         
         else:
             print(match)
+    
+    def ami_ari_average(self, new_path: str = None) -> float:
+        '''
+        Given a csv file that has been clustered and has structure id's calculate AMI, ARI, and Average Median Distance
+
+        Args:
+            self.file: path of the csv file
+
+        Returns:
+            None
+        '''
+
+        df = read(self.file)
         
+        print(adjusted_mutual_info_score( df["Structure-ID"], df["Cluster_13"] ) )
+        print(adjusted_rand_score( df["Structure-ID"], df["Cluster_13"] ) )
+
+
+        structure_stats = df.groupby("Structure-ID").agg({
+            "X": "mean",
+            "Y": "mean",
+            "Z": "mean",
+        }).reset_index()
+        structure_stats.rename(columns={"voxRowNum": "voxel_count"}, inplace=True)
+
+        cluster_stats = df.groupby("Cluster_13").agg({
+            "X": "mean",
+            "Y": "mean",
+            "Z": "mean"
+        }).reset_index()
+
+        print(structure_stats)
+        print(cluster_stats)
+
+
     def distinct_structures(self, new_path: str = None) -> None:
         '''
         Given a csv file that has a structure_name column, create a text file with the occurence of that structure

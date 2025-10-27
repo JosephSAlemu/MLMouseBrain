@@ -93,7 +93,6 @@ class Visualize():
         return counts
 
     def cluster_structure_analysis(self):
-
         df = read(self.file)
 
         structure_stats = df.groupby("Structure-ID").agg({

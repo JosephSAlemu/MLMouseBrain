@@ -10,6 +10,7 @@ import ast
 import os
 import paramiko
 import matplotlib.image as mpimg
+import matplotlib.patches as patches
 from typing import Type
 from matplotlib.patches import Rectangle
 from math import modf
@@ -18,6 +19,7 @@ from src.utils.validation import (is_valid_image)
 from src.constants import DENSITY, P4_MOUSE_REFERENCE_ID, FILE_START, FILE_END
 from src.api.api import (image_to_reference, upload_file, directories, reference_to_image)
 from src.enums.actions import Action
+import cv2
 
 p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
@@ -51,17 +53,23 @@ def plot() -> None:
 
     '''
 
-    # Change constant if you want to perform dilation or not.
+    # Change variable if you want to perform dilation or not.
     dilate = False
+    # Change variable if you want to download ISH and binarized section images or not
+    download_images = True
+    # Download the seed pixel binarized image
+    download_seed_binarized = True
     # You have to loop through each dataset_id
     # For each section dataset id, you need to loop through the number of valid section image id's.
-    for incrementor in range(1):
+    i = 1
+    for incrementor in range(i, i+1):
         
         lst = list(map(int, p4_file.iloc[incrementor]["Images"].strip("{}").split(", ")))
         print(lst)
         # Second loop for all the section images associated with the section_dataset_id
         for ind in range(len(lst)):
             section_image_id = lst[ind]
+
 
             #x_coords = []
             #y_coords =[]
@@ -75,6 +83,12 @@ def plot() -> None:
             for coord in row:
                 points.append(coord)
 
+            if download_images:
+                binarized_image(section_image_id)
+                image(section_image_id)
+            
+            if download_seed_binarized:
+                display_collisions(points, section_image_id)
 
             if len(points) > 1:
                 x_min = min(p[0] for p in points)
@@ -151,6 +165,7 @@ def plot() -> None:
             plt.legend()
             plt.axis("equal")  
             plt.title(f"{p4_file.iloc[incrementor]['Gene']}: {section_image_id}")
+            plt.gca().invert_yaxis()
             plt.show(block=False)
             plt.pause(0.1)
             # Fix aspect ratio to ensure correct spacing
@@ -304,19 +319,50 @@ def get_valid_boxes(section_image_id: str, func: int) -> list[tuple,tuple]:
     return valid_boxes
         
 
+def display_collisions(seed_pixels: list[tuple], section_image: int):
+    img_path = f"./Datasets/Binarized/{section_image}.jpg"
+    image = cv2.imread(img_path)
+    if image is None:
+        raise FileNotFoundError(f"Image not found: {img_path}")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+
+    box_size = 50
+    for x, y in seed_pixels:
+        rect = patches.Rectangle((x, y), box_size, box_size,
+                                 linewidth=2, edgecolor='r', facecolor='none')
+        ax.add_patch(rect)
+    
+    plt.title(f"{section_image}")
+    plt.show(block=False)
+
+
 def binarized_image(section_image: int) -> None:
     '''
     download the binarized image if it's not present
     '''
+    path = rf"./Datasets/Binarized/{section_image}.png"
+    url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(path, "wb") as file:
+        for chunk in response:
+            file.write(chunk)
+
+def image(section_image: int) -> None:
+    '''
+    download the binarized image if it's not present
+    '''
     
-    while is_valid_image(section_image):
-        path = rf"./Datasets/SectionImages/{section_image}.jpg"
-        url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
-        response = requests.get(url, stream=True)
-        response.raise_for_status()
-        with open(path, "wb") as file:
-            for chunk in response:
-                file.write(chunk)
+    path = rf"./Datasets/ISH/{section_image}.png"
+    url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}"
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(path, "wb") as file:
+        for chunk in response:
+            file.write(chunk)
 
 
 def retrieve_binarized_image(section_image: int) -> None:

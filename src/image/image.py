@@ -21,8 +21,7 @@ from src.api.api import (image_to_reference, upload_file, directories, reference
 from src.enums.actions import Action
 import cv2
 
-p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
-p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
+
 
 """client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -52,6 +51,8 @@ def plot() -> None:
     2. the y values of the top-most and bottom-most seed pixels and the x values of the left-most and right-most seed pixels
 
     '''
+    p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
+    p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
     # Change variable if you want to perform dilation or not.
     dilate = False

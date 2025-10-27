@@ -269,7 +269,7 @@ class Utility:
         else:
             print(match)
     
-    def ami_ari_average(self, new_path: str = None) -> float:
+    def ami_ari_average(self, other_df: str = None, new_path: str = None) -> float:
         '''
         Given a csv file that has been clustered and has structure id's calculate AMI, ARI, and Average Median Distance
 
@@ -281,12 +281,21 @@ class Utility:
         '''
 
         df = read(self.file)
-        
-        print(f"AMI = {adjusted_mutual_info_score( df["Structure-ID"], df["Cluster_13"] )}")
-        print(f"ARI = {adjusted_rand_score( df["Structure-ID"], df["Cluster_13"] )} ")
+        if other_df:
+            o_df = read(other_df)
+            print(f"AMI = {adjusted_mutual_info_score( df["Structure-ID"], o_df["Cluster_13"] )}")
+            print(f"ARI = {adjusted_rand_score( df["Structure-ID"], o_df["Cluster_13"] )} ")
 
-        structure_centroids = df.groupby("Structure-ID")[HEADERS].mean()
-        cluster_centroids   = df.groupby("Cluster_13")[HEADERS].mean()
+            structure_centroids = df.groupby("Structure-ID")[HEADERS].mean()
+            cluster_centroids   = o_df.groupby("Cluster_13")[HEADERS].mean()
+        
+        else:
+
+            print(f"AMI = {adjusted_mutual_info_score( df["Structure-ID"], df["Cluster_13"] )}")
+            print(f"ARI = {adjusted_rand_score( df["Structure-ID"], df["Cluster_13"] )} ")
+
+            structure_centroids = df.groupby("Structure-ID")[HEADERS].mean()
+            cluster_centroids   = df.groupby("Cluster_13")[HEADERS].mean()
 
         structure_ids = structure_centroids.index.to_list()
         cluster_ids   = cluster_centroids.index.to_list()

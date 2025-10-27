@@ -92,20 +92,31 @@ class Visualize():
 
         return counts
 
-    def cluster_structure_analysis(self):
+    def cluster_structure_analysis(self, other_df: str = None):
         df = read(self.file)
-
+        clusters = []
         structure_stats = df.groupby("Structure-ID").agg({
-            "X": "mean",
-            "Y": "mean",
-            "voxRowNum": "count"
-        }).reset_index()
+                "X": "mean",
+                "Y": "mean",
+                "voxRowNum": "count"
+            }).reset_index()
         structure_stats.rename(columns={"voxRowNum": "voxel_count"}, inplace=True)
 
         cluster_stats = df.groupby("Cluster_13").agg({
+                "X": "mean",
+                "Y": "mean"
+            }).reset_index()
+
+        clusters.append(cluster_stats)
+        if other_df:
+            o_df = read(other_df)
+
+            cluster_stats_o = o_df.groupby("Cluster_13").agg({
             "X": "mean",
             "Y": "mean"
-        }).reset_index()
+            }).reset_index()
+            clusters.append(cluster_stats_o)
+
 
         desired_order =  [136, 143, 307, 661, 773, 852, 939, 970, 978, 1048, 1098, 1107]
 
@@ -115,16 +126,23 @@ class Visualize():
 
         for _, row in df_sorted.iterrows():
             plt.scatter(row["X"], row["Y"],
-                        s=row["voxel_count"],
+                        s=row["voxel_count"]*10,
                         color=STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS[row["Structure-ID"]],
-                        alpha=0.6,
+                        alpha=.8,
                         label=f"Structure {STRUCTURE_ID_ABBREVIATIONS[row['Structure-ID']]}")
-            
+        
         plt.scatter(cluster_stats["X"], cluster_stats["Y"],
-                    c="black", marker=".", s=100, label="Cluster Centers")
+                    c="black", marker=".", s=100, label="P4 Mapped Cluster Centers")
+        if other_df:
+            plt.scatter(cluster_stats_o["X"], cluster_stats_o["Y"],
+                        c="green", marker="s", s=25, label="P4 Resampled Cluster Centers")
 
-        for _, row in cluster_stats.iterrows():
-            plt.text(row["X"] + 0.1, row["Y"] - 0.1, int(row["Cluster_13"]), fontsize=9, ha='left', va='top')
+        i = 1  
+        for stats in clusters:
+            
+            for _, row in stats.iterrows():
+                plt.text(row["X"] + i/11, row["Y"] - i/11, int(row["Cluster_13"]), fontsize=9, ha='left', va='top')
+
 
         plt.xlabel("X")
         plt.ylabel("Y")
@@ -132,22 +150,26 @@ class Visualize():
         handles = [
             mlines.Line2D([], [], 
                         color=STRUCTURE_ID_CLUSTER_ANALYSIS_COLORS[sid],
-                        marker='o', linestyle='None', markersize=8,
+                        marker='o', linestyle='None', markersize=8, alpha = .8,
                         label=STRUCTURE_ID_ABBREVIATIONS[sid])
             for sid in desired_order
         ]
         handles.append(
             mlines.Line2D([], [], 
                         color='black', marker='o', linestyle='None', markersize=8,
-                        label='Cluster Centers')
+                        label='P4 Mapped Cluster Centers'),
+        )
+        handles.append(
+            mlines.Line2D([], [], 
+                        color='green', marker='s', linestyle='None', markersize=8,
+                        label='P4 Resampled Cluster Centers')
         )
         plt.legend(
             handles=handles,
-            bbox_to_anchor=(1.05, 1),
+            bbox_to_anchor=(1.05, .8),
             loc="upper left",
-            fontsize=8,
-            title="Structures",
-            borderaxespad=0.
+            fontsize=10,
+            shadow=True
         )
         plt.tight_layout()
         plt.show()

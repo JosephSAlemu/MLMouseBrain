@@ -127,9 +127,17 @@ if __name__ == "__main__":
 
     #util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
     #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_NEX.csv", "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_Random_11Sets.csv", df_drop_other=["structure_id","structure_acronym","structure_name"])
-    util.file = "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_Random_11Sets.csv"
+    #util.file = "Datasets\\50Micron\P4_50_RE_90.csv"
 
-    util(1,"Datasets/Outputs/knn/11set/Random/random_11_n_1.csv", HEADERS_V5)
+    #util.filter_genes(0.001, HEADERS, "Datasets\\50Micron\P4_50_RE_90_F.csv")
+
+    #util.file = "Datasets\\50Micron\P4_50_RE_90_F.csv"
+
+    #util.z_score_normalize("Z", "Datasets\\50Micron\P4_50_RE_90_F_Z.csv", HEADERS)
+
+    #util.file = "Datasets\\50Micron\P4_50_RE_90_F_Z.csv"
+
+    #util.knn_impute(1,"Datasets\\50Micron\P4_50_RE_90_F_Z_K.csv", HEADERS)
     #main()
 
     #util = Utility()
@@ -187,12 +195,9 @@ if __name__ == "__main__":
     #util.file = "Datasets/Outputs/knn/1set/100091964/n_1.csv"
     #util.distinct_structures("Datasets/Outputs/AMDBAP411/Cluster/100091964/distribution.txt")
 
-    
-
     visual.file = "Datasets\\Ldb1\\100091964_D_F_Z_K_C.csv"
+    visual.cluster_structure_analysis(other_df="Datasets\\50Micron\P4_50_RE_90_F_Z_K_C.csv")
+    
+    #util.file = "Datasets\\50Micron\P4_50_RE_90_F_Z_K_C.csv"
 
-    visual.cluster_structure_analysis()
-
-    util.file = "Datasets\\Ldb1\\100091964_D_F_Z_K_C.csv"
-
-    util.ami_ari_average()
+    #util.ami_ari_average()

@@ -19,10 +19,10 @@ from src.constants import DENSITY, P4_MOUSE_REFERENCE_ID, FILE_START, FILE_END
 from src.api.api import (image_to_reference, upload_file, directories, reference_to_image)
 from src.enums.actions import Action
 
-"""p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
+p4_image_coords = pd.read_csv(r"Datasets/Outputs/P4_Image_Coords.csv")
 p4_file = pd.read_csv(r"Datasets/Outputs/P4_Section_Data.csv")
 
-client = paramiko.SSHClient()
+"""client = paramiko.SSHClient()
 client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 client.connect(os.getenv("DOMAIN"), username=os.getenv("USERNAME"), password=os.getenv("PASSWORD"), compress=True)
 
@@ -44,14 +44,15 @@ def plot() -> None:
     2. Then calculate density afterwards
 
     or
+
     1. take the extrema of the x and y and divide that rectangle into 50 um bins, and then any bin with a seed pixel is one that you count.
 
     2. the y values of the top-most and bottom-most seed pixels and the x values of the left-most and right-most seed pixels
 
     '''
 
-
-
+    # Change constant if you want to perform dilation or not.
+    dilate = False
     # You have to loop through each dataset_id
     # For each section dataset id, you need to loop through the number of valid section image id's.
     for incrementor in range(1):
@@ -121,7 +122,7 @@ def plot() -> None:
             # Append the result, the int index of the answer, in the array
             valid_boxes = set()
             #Check if points length > 1 otherwise binary search doesn't work.
-            if len(points) > 1:
+            if len(points) > 1 and dilate:
                 for seed in points:
                     index = binary_search(boxes, len(grid_y)-1, seed)
                     dilated = binary_dilation(boxes, len(grid_y)-1, index)
@@ -132,7 +133,7 @@ def plot() -> None:
             seed_points = [((p[0][0]+p[0][1])/2, (p[1][0]+p[1][1])/2) for p in valid_boxes]
 
             plt.scatter(*zip(*points), marker='s', color='red', s=10, label="Seed Points")
-            if len(points) > 1:
+            if len(points) > 1 and dilate:
                 plt.scatter(*zip(*seed_points), marker='s', color='blue', s=10, label="Dilated Points")
 
             # Draw grid lines

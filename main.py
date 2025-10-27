@@ -119,10 +119,17 @@ if __name__ == "__main__":
     #for i in range(1,11):
         #util.knn_impute(i, f"Datasets/Outputs/knn/10set/base/n_{i}.csv", HEADERS_V2)
 
-    #util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
+    #util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped.csv"
+
 
     #util.check_conflicting_voxel_structures("skds")
     #util.pick_random_structure("Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv")
+
+    #util.file = "Datasets/Outputs/AMDBAP411/Voxels/rounded_merged_dupes_dropped_random.csv"
+    #util.get_common_voxels_and_genes("Datasets/Outputs/p4_Complete_Brain_NEX.csv", "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_Random_11Sets.csv", df_drop_other=["structure_id","structure_acronym","structure_name"])
+    util.file = "Datasets/Outputs/AMDBAP411/Pipeline/P4_Complete_Brain_Random_11Sets.csv"
+
+    util(1,"Datasets/Outputs/knn/11set/Random/random_11_n_1.csv", HEADERS_V5)
     #main()
 
     #util = Utility()

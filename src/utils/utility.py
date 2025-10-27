@@ -11,10 +11,11 @@ from sklearn.impute import KNNImputer, SimpleImputer
 from sklearn.model_selection import train_test_split
 from collections.abc import Callable
 from collections import Counter, defaultdict
+from scipy.spatial.distance import cdist
 from scipy.stats import zscore
 from src.enums.inequality import Inequality
 from src.enums.dimensions import Dimensions
-from src.constants import HEADERS, HEADERS_V2, HEADERS_V4, STRUCTURE_ID_ABBREVIATIONS
+from src.constants import HEADERS, HEADERS_V2, HEADERS_V4, HEADERS_V7, STRUCTURE_ID_ABBREVIATIONS
 from scripts.script import list_files_in_dir, read, drop_columns
 from collections import defaultdict
 
@@ -281,25 +282,53 @@ class Utility:
 
         df = read(self.file)
         
-        print(adjusted_mutual_info_score( df["Structure-ID"], df["Cluster_13"] ) )
-        print(adjusted_rand_score( df["Structure-ID"], df["Cluster_13"] ) )
+        print(f"AMI = {adjusted_mutual_info_score( df["Structure-ID"], df["Cluster_13"] )}")
+        print(f"ARI = {adjusted_rand_score( df["Structure-ID"], df["Cluster_13"] )} ")
 
+        structure_centroids = df.groupby("Structure-ID")[HEADERS].mean()
+        cluster_centroids   = df.groupby("Cluster_13")[HEADERS].mean()
 
-        structure_stats = df.groupby("Structure-ID").agg({
-            "X": "mean",
-            "Y": "mean",
-            "Z": "mean",
-        }).reset_index()
-        structure_stats.rename(columns={"voxRowNum": "voxel_count"}, inplace=True)
+        structure_ids = structure_centroids.index.to_list()
+        cluster_ids   = cluster_centroids.index.to_list()
 
-        cluster_stats = df.groupby("Cluster_13").agg({
-            "X": "mean",
-            "Y": "mean",
-            "Z": "mean"
-        }).reset_index()
+        structure_coords = structure_centroids.values
+        cluster_coords   = cluster_centroids.values
 
-        print(structure_stats)
-        print(cluster_stats)
+        distance_matrix = cdist(structure_coords, cluster_coords, metric="euclidean")
+
+        pairs = []
+        remaining_structures = list(range(len(structure_ids)))
+        remaining_clusters = list(range(len(cluster_ids)))
+
+        while remaining_structures and remaining_clusters:
+            sub_matrix = distance_matrix[np.ix_(remaining_structures, remaining_clusters)]
+            i, j = np.unravel_index(np.argmin(sub_matrix), sub_matrix.shape)
+
+            struct_idx = remaining_structures[i]
+            clust_idx = remaining_clusters[j]
+            dist_val = distance_matrix[struct_idx, clust_idx]
+
+            pairs.append((structure_ids[struct_idx], cluster_ids[clust_idx], dist_val))
+
+            remaining_structures.remove(struct_idx)
+            remaining_clusters.remove(clust_idx)
+
+        structure_structure_dists = cdist(structure_coords, structure_coords, metric="euclidean")
+        max_struct_dist = np.max(structure_structure_dists)
+        threshold = 0.5 * max_struct_dist
+
+        filtered_pairs = [(s, c, d) for s, c, d in pairs if d < threshold]
+
+        distances = [d for (_, _, d) in filtered_pairs]
+        median_distance = np.median(distances) if distances else np.nan
+
+        print("==== Greedy Cluster–Structure Pairing Results ====")
+        for s, c, d in filtered_pairs:
+            print(f"Structure {s}  ↔  Cluster {c}  |  Distance = {d:.4f}")
+
+        print("\nHalf of max structure distance threshold:", round(threshold, 4))
+        print("Median distance of remaining pairs:", round(median_distance, 4))
+        print(f"\nTotal pairs considered: {len(pairs)}, Pairs kept after filtering: {len(filtered_pairs)}")
 
 
     def distinct_structures(self, new_path: str = None) -> None:
@@ -478,3 +507,31 @@ class Utility:
                 x,y,z = key
                 writer.writerow([top, x, y, z])
     
+    def use_delegate_P4_genes(self, new_path: str) -> None:
+        '''
+        Drops P4 genes with a period after them. This is to reduce the 2219 genes in the P4 ADMBA to 2072 genes.
+        '''
+        df = pd.read_csv(self.file)
+
+        cols = df.columns.tolist()
+
+        cols_to_drop = [
+            c for c in cols
+            if "." in c and c.split(".")[0] in cols
+        ]
+
+        df = df.drop(columns=cols_to_drop)
+
+        df.to_csv(new_path, index=False)
+
+    def compare_genes(self, file_path: str) -> None:
+        df = pd.read_csv(self.file)
+        o_df = pd.read_csv(file_path)
+
+        df = df.drop(columns=HEADERS_V7, errors='ignore')
+        o_df = o_df.drop(columns=HEADERS, errors='ignore')
+
+        common_cols = df.columns.intersection(o_df.columns)
+
+        print(df.loc[:, common_cols])
+        print(df)

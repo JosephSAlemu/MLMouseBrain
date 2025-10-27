@@ -180,5 +180,12 @@ if __name__ == "__main__":
     #util.file = "Datasets/Outputs/knn/1set/100091964/n_1.csv"
     #util.distinct_structures("Datasets/Outputs/AMDBAP411/Cluster/100091964/distribution.txt")
 
-    util.file = "Datasets/n_1_13cluster.csv"
+    
+
+    visual.file = "Datasets\\Ldb1\\100091964_D_F_Z_K_C.csv"
+
+    visual.cluster_structure_analysis()
+
+    util.file = "Datasets\\Ldb1\\100091964_D_F_Z_K_C.csv"
+
     util.ami_ari_average()

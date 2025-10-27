@@ -67,8 +67,9 @@ def plot() -> None:
         lst = list(map(int, p4_file.iloc[incrementor]["Images"].strip("{}").split(", ")))
         print(lst)
         # Second loop for all the section images associated with the section_dataset_id
-        for ind in range(len(lst)):
-            section_image_id = lst[ind]
+        #for ind in range(len(lst)):
+        if True:
+            section_image_id = 101119843
 
 
             #x_coords = []
@@ -87,8 +88,6 @@ def plot() -> None:
                 binarized_image(section_image_id)
                 image(section_image_id)
             
-            if download_seed_binarized:
-                display_collisions(points, section_image_id)
 
             if len(points) > 1:
                 x_min = min(p[0] for p in points)
@@ -103,6 +102,10 @@ def plot() -> None:
                 y_min-=25
                 x_max+=25
                 y_max+=25
+
+            if download_seed_binarized:
+                display_collisions(points, section_image_id, x_min-50, x_max+50, y_min-50, y_max+50)
+                display_ish(points, section_image_id, x_min-50, x_max+50, y_min-50, y_max+50)
 
             print(f"ymin = {y_min}, ymax = {y_max}, xmin = {x_min}, xmax = {x_max}")
 
@@ -157,6 +160,9 @@ def plot() -> None:
                 plt.axhline(y, color='gray', alpha=0.5)
 
             # Labels and settings
+            plt.xlim(x_min-50, x_max+50)
+            plt.ylim(y_min-50, y_max+50)  # inverted y-axis
+            plt.tight_layout(pad=0)
             plt.xlabel("X-axis (Micron)")
             plt.ylabel("Y-axis (Micron)")
             plt.xticks(grid_x, rotation=45)  # Show ticks at grid positions
@@ -166,6 +172,8 @@ def plot() -> None:
             plt.axis("equal")  
             plt.title(f"{p4_file.iloc[incrementor]['Gene']}: {section_image_id}")
             plt.gca().invert_yaxis()
+            plt.subplots_adjust(bottom=0.11)
+            plt.savefig("Datasets/research_images/grid.png")
             plt.show(block=False)
             plt.pause(0.1)
             # Fix aspect ratio to ensure correct spacing
@@ -318,8 +326,33 @@ def get_valid_boxes(section_image_id: str, func: int) -> list[tuple,tuple]:
 
     return valid_boxes
         
+def display_ish(seed_pixels: list[tuple], section_image: int, x_min: float, x_max: float, y_min: float, y_max: float):
+    """
+    Displays the ISH image cropped to the same region as the grid and binarized images.
+    """
+    img_path = f"./Datasets/ISH/{section_image}.jpg"
+    image = cv2.imread(img_path)
+    if image is None:
+        raise FileNotFoundError(f"Image not found: {img_path}")
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-def display_collisions(seed_pixels: list[tuple], section_image: int):
+    fig, ax = plt.subplots()
+    ax.imshow(image)
+
+    if seed_pixels:
+        x_coords, y_coords = zip(*seed_pixels)
+        ax.scatter(x_coords, y_coords, c='red', s=10, marker='o', label='Seed Points')
+        
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_max, y_min)
+    plt.tight_layout(pad=0)
+    
+    plt.title(f"{section_image}")
+    plt.savefig("Datasets/research_images/ish.png")
+
+
+
+def display_collisions(seed_pixels: list[tuple], section_image: int, x_min: int, x_max: int, y_min: int, y_max: int):
     img_path = f"./Datasets/Binarized/{section_image}.jpg"
     image = cv2.imread(img_path)
     if image is None:
@@ -332,24 +365,17 @@ def display_collisions(seed_pixels: list[tuple], section_image: int):
     box_size = 50
     for x, y in seed_pixels:
         rect = patches.Rectangle((x, y), box_size, box_size,
-                                 linewidth=2, edgecolor='r', facecolor='none')
+                                 linewidth=1, edgecolor='r', facecolor='none')
         ax.add_patch(rect)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_max, y_min)
+    plt.tight_layout(pad=0)
     
     plt.title(f"{section_image}")
+    plt.savefig("Datasets/research_images/collision.png")
+
+
     plt.show(block=False)
-
-
-def binarized_image(section_image: int) -> None:
-    '''
-    download the binarized image if it's not present
-    '''
-    path = rf"./Datasets/Binarized/{section_image}.png"
-    url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
-    response = requests.get(url, stream=True)
-    response.raise_for_status()
-    with open(path, "wb") as file:
-        for chunk in response:
-            file.write(chunk)
 
 def image(section_image: int) -> None:
     '''
@@ -364,6 +390,17 @@ def image(section_image: int) -> None:
         for chunk in response:
             file.write(chunk)
 
+def binarized_image(section_image: int) -> None:
+    '''
+    download the binarized image if it's not present
+    '''
+    path = rf"./Datasets/Binarized/{section_image}.png"
+    url = rf"http://api.brain-map.org/api/v2/image_download/{section_image}?view=expression"
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+    with open(path, "wb") as file:
+        for chunk in response:
+            file.write(chunk)
 
 def retrieve_binarized_image(section_image: int) -> None:
     """

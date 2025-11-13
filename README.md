@@ -5,4 +5,4 @@
 
  - Install all the dependencies in requirements.txt
 
- - Download the Datasets folder from Josephswork/Datasets in the google drive and put the file in the MLMouseBrain File 
+ - I will upload all datasets to GitHub using Git LFS soon.

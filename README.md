@@ -1,8 +1,27 @@
 # MLMouseBrain
+A tool for identifying the functional regions of the medullary reticular formation in a developing brain using mouse brain data from the Allen Developing Mouse Brain Atlas (ADMBA).
+
+## Features
+- Downloading ISH images from the ADMBA (Normal/Binarized Images).
+- Gridding Images at a specific resolution.
+- Interacting with the [Image-to-Image ADMBA Synchronization API](https://brain-map.org/support/tutorials/image-to-image-synchronization) to perform Image-To-Reference and Reference-To-Image conversions.
+- Mapping voxels across the P56 and P4 mouse brains.
+- Binning voxels mapped to ISH images.
+- Dilating mapped voxels.
+- KNN-imputation for missing gene expression data
+- Z-score normalization to normalize sagittal brain cross-section images
+- Multi-threading for processing large volumes of mouse brain voxels and gene expression.
+- Projected Cluster Proximity.
+
+## Visualization and K-means clustering
+- Use data in tandem with Brandon Kong's [orofacial atlas visualization tool](https://github.com/brandondkong/orofacial-atlas)
 
 ## Steps to use
- - Create a virtual environment
+ - Create a virtual environment and install all the dependencies in requirements.txt
+ - Please stick to files marked with "new<filename>" as they are the refactored versions of old files.
+ - Use classes and methods in main.py in the root directory.
+ - Input your own CSV file of voxels with gene expression measurements.
 
- - Install all the dependencies in requirements.txt
-
- - I will upload all datasets to GitHub using Git LFS soon.
+## IMPORTANT!
+- I am currently working on a rewrite for this project called [mayit](https://github.com/JosephSAlemu/mayit)
+- Feel free to open issues, fork, or submit PR's!

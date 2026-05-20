@@ -23,5 +23,5 @@ A tool for identifying the functional regions of the medullary reticular formati
  - Input your own CSV file of voxels with gene expression measurements.
 
 ## IMPORTANT!
-- I am currently working on a rewrite for this project called [mayit](https://github.com/JosephSAlemu/mayit)
+- I am currently working on a High Performance C++20 rewrite for this project.
 - Feel free to open issues, fork, or submit PR's!

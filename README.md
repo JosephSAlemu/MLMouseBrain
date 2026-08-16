@@ -1,6 +1,9 @@
 # MLMouseBrain
 A tool for identifying the functional regions of the medullary reticular formation in a developing brain using mouse brain data from the Allen Developing Mouse Brain Atlas (ADMBA).
 
+## Research Paper (thanks to this project):
+- https://ieeexplore.ieee.org/document/11621652/
+
 ## Features
 - Downloading ISH images from the ADMBA (Normal/Binarized Images).
 - Gridding Images at a specific resolution.
